@@ -22,3 +22,18 @@ def get_scrooge_walking_images():
             "right": ["walking_right_1.png", "walking_right_2.png"]}
 
 
+def get_amazon_landscapes_images():
+    image = Image.open("data/amazon_lanscape_sheet.png")
+    image.crop((0, 13, 15, 32)).save("data/grass.png")
+    image.crop((16, 0, 32, 16)).save("data/trunk.png")
+    image.crop((0, 31, 16, 48)).save("data/middle_grass.png")
+
+    image = Image.open("data/DuckTalesMap1.png")
+    image.crop((1019, 1360, 1061, 1392)).save("data/stump.png")
+
+
+
+get_amazon_landscapes_images()
+
+
+
