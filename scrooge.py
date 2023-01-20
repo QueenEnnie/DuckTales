@@ -98,11 +98,7 @@ if __name__ == '__main__':
                 right = True
 
         if move_right:
-            if right:
-                player_group.update("right")
-                print(1)
-            else:
-                print("NO")
+            player_group.update("right")
         if move_left:
             player_group.update("left")
 
