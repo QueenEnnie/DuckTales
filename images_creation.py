@@ -30,7 +30,16 @@ def get_amazon_landscapes_images():
 
     image = Image.open("data/DuckTalesMap1.png")
     image.crop((1019, 1360, 1061, 1392)).save("data/stump.png")
+    image.crop((9, 1408, 26, 1424)).save("data/earth.png")
+    image.crop((0, 1200, 32, 1232)).save("data/leaves.png")
 
+    amazon_images = {"grass": "grass.png",
+                     "trunk": "trunk.png",
+                     "middle_grass": "middle_grass.png",
+                     "stump": "stump.png",
+                     "earth": "earth.png",
+                     "leaves": "leaves.png"}
+    return amazon_images
 
 
 get_amazon_landscapes_images()
