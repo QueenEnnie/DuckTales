@@ -1,3 +1,4 @@
+import pygame
 from PIL import Image
 
 
@@ -24,7 +25,7 @@ def get_scrooge_walking_images():
 
 def get_amazon_landscapes_images():
     image = Image.open("data/amazon_lanscape_sheet.png")
-    image.crop((0, 13, 15, 32)).save("data/grass.png")
+    image.crop((0, 16, 15, 32)).save("data/grass.png")
     image.crop((16, 0, 32, 16)).save("data/trunk.png")
     image.crop((0, 31, 16, 48)).save("data/middle_grass.png")
 
@@ -33,13 +34,37 @@ def get_amazon_landscapes_images():
     image.crop((9, 1408, 26, 1424)).save("data/earth.png")
     image.crop((0, 1200, 32, 1232)).save("data/leaves.png")
 
-    amazon_images = {"grass": "grass.png",
-                     "trunk": "trunk.png",
-                     "middle_grass": "middle_grass.png",
-                     "stump": "stump.png",
-                     "earth": "earth.png",
-                     "leaves": "leaves.png"}
+    amazon_images = {"G": "grass.png",
+                     "T": "trunk.png",
+                     "M": "middle_grass.png",
+                     "S": "stump.png",
+                     "E": "earth.png",
+                     "L": "leaves.png"}
     return amazon_images
+
+
+def get_sky_colour():
+    image = Image.open("data/DuckTalesMap1.jpg")
+    pixels = image.load()
+    return pixels[0, 0]
+    # width, length = image.size
+    # print(width, length)
+    # summa_r, summa_b, summa_g = 0, 0, 0
+    # for i in range(width):
+    #     for j in range(length):
+    #         print(pixels[i, j])
+    #         r, g, b = pixels[i, j]
+    #         summa_r += r
+    #         summa_b += b
+    #         summa_g += g
+    #         print(r, g, b)
+    # pixels = image.load()
+
+
+# def get_sky_colour():
+#     image = pygame.image.load("data/DuckTalesMap1.png").copy()
+#     colour = image.get_at((0, 0))
+#     return colour[0], colour[1], colour[3]
 
 
 get_amazon_landscapes_images()
