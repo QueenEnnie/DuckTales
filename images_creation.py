@@ -23,6 +23,13 @@ def get_scrooge_walking_images():
             "right": ["walking_right_1.png", "walking_right_2.png"]}
 
 
+def get_scrooge_jumping_images():
+    image = Image.open("data/scrooge_sheet.png")
+    image.crop((189, 0, 215, 32)).save("data/jumping_left.png")
+    image.crop((214, 0, 240, 32)).save("data/jumping_right.png")
+    return {"right": "jumping_right.png", "left": "jumping_left.png"}
+
+
 def get_amazon_landscapes_images():
     image = Image.open("data/amazon_lanscape_sheet.png")
     image.crop((0, 16, 15, 32)).save("data/grass.png")
@@ -69,6 +76,7 @@ def get_sky_colour():
 
 
 get_amazon_landscapes_images()
+get_scrooge_jumping_images()
 
 
 

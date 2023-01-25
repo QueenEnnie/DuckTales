@@ -4,9 +4,9 @@ import os
 import images_creation
 
 WIDTH, HEIGHT = 1000, 600
-FPS = 60
 TILES_IMAGES = images_creation.get_amazon_landscapes_images()
 TILE_SIZE = 50
+FPS = 60
 
 
 class Camera:
@@ -20,19 +20,26 @@ class Camera:
         # print(tile_object.rect.x)
 
     def update(self, target):
-        # if target.rect.x > 150:
         self.delta_x = -(target.rect.x + target.rect.w // 2 - width // 2)
-        # if self.delta_x > 0:
-        #     print(self.delta_x, target.rect.x)
         # self.delta_y = -(target.rect.y + target.rect.h // 2 - height // 2)
 
 
 class ScroogeMcDuck(pygame.sprite.Sprite):
     def __init__(self, position_x, position_y):
         super().__init__(player_group, all_sprites)
-        self.move = False
-        self.direction = None
-        self.count_change = 0
+        self.move_right_left = False
+        self.jump = False
+        self.reach_higher_point = False
+        self.direction = "left"
+
+        # self.delta_jump = 100
+        self.delta = 0
+        self.delta_jump_y = 20
+        self.delta_jump_x = 0
+
+        self.count_iteration_left_right = 0
+        self.count_iteration_jump = 0
+        self.count_rise = 0
         self.count_loop = 0
 
         self.position_x = position_x * TILE_SIZE
@@ -40,39 +47,94 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
 
         self.standing_image = images_creation.get_scrooge_standing_images()
         self.walking_image = images_creation.get_scrooge_walking_images()
+        self.jumping_image = images_creation.get_scrooge_jumping_images()
 
         self.image = load_image(self.standing_image["left"], -1)
         self.image = pygame.transform.scale(self.image, (2 * TILE_SIZE, 2 * TILE_SIZE))
-        self.rect = self.image.get_rect().move(self.position_x + 2, self.position_y)
+        self.rect = self.image.get_rect().move(self.position_x, self.position_y)
 
     def check_stump_collision(self):
         collision = pygame.sprite.spritecollideany(self, stump_group)
         if collision:
-            if (collision.rect.x <= self.rect.x and
-                self.direction == "left") or (collision.rect.x > self.rect.x
-                                              and self.direction == "right"):
-                self.move = False
+            if self.move_right_left:
+                if collision.rect.x <= self.rect.x and self.direction == "left":
+                    self.move_right_left = False
+                if collision.rect.x > self.rect.x and self.direction == "right":
+                    self.move_right_left = False
+            if self.jump:
+                if collision.rect.y <= self.rect.y + self.rect.h <= collision.rect.y + collision.rect.h:
+                    self.return_to_the_ground()
+                # if collision.rect.y <= self.rect.y + self.rect.h < collision.rect.y + collision.rect.h:
+                #     self.jump = False
+
+    def return_to_the_ground(self):
+        print(self.rect.y, TILE_SIZE * 10)
+        delta = self.rect.y - 10 * TILE_SIZE - self.rect.h
+        print(delta)
+        self.rect = self.rect.move(0, delta)
+        image_name = self.standing_image[self.direction]
+        self.image = load_image(image_name, -1)
+        self.image = pygame.transform.scale(self.image, (2 * TILE_SIZE, 2 * TILE_SIZE))
 
     def update(self, move_event=None):
-        if move_event in ["right", "left"]:
-            self.move = True
-            self.direction = move_event
-        delta = -20 if self.direction == "left" else 20
+        if move_event in ["left", "right"]:
+            if self.jump:
+                self.direction = move_event
+                if move_event == "right":
+                    self.delta_jump_x = 10
+                elif move_event == "left":
+                    self.delta_jump_x = -10
+            else:
+                if move_event == "right":
+                    self.move_right_left = True
+                    self.direction = "right"
+                    self.delta = 20
+                elif move_event == "left":
+                    self.move_right_left = True
+                    self.direction = "left"
+                    self.delta = -20
+        if move_event == "jump":
+            self.jump = True
 
         self.check_stump_collision()
-
-        if self.move:
+        if self.move_right_left:
             if self.count_loop % 8 == 0:
-                current_image = self.count_change % len(self.walking_image[self.direction])
+                current_image = self.count_iteration_left_right % len(self.walking_image[self.direction])
                 image_name = self.walking_image[self.direction][current_image]
                 self.image = load_image(image_name, -1)
                 self.image = pygame.transform.scale(self.image, (100, 100))
-                self.count_change += 1
-            if self.count_change == 2:
-                self.rect = self.rect.move(delta, 0)
-                self.move = False
-                self.count_change = 0
+                self.count_iteration_left_right += 1
+            if self.count_iteration_left_right == 2:
+                self.rect = self.rect.move(self.delta, 0)
+                self.move_right_left = False
+                self.count_iteration_left_right = 0
             self.count_loop += 1
+
+        if self.jump:
+            if self.count_iteration_jump % 4 == 0:
+                if not self.reach_higher_point:
+                    if self.count_rise < 10:
+                        image_name = self.jumping_image[self.direction]
+                        self.image = load_image(image_name, -1)
+                        self.image = pygame.transform.scale(self.image, (2 * TILE_SIZE, 2 * TILE_SIZE))
+                        self.rect = self.rect.move(self.delta_jump_x, -self.delta_jump_y)
+                        self.count_rise += 1
+                    else:
+                        self.reach_higher_point = True
+                else:
+                    if self.count_rise > 0:
+                        image_name = self.jumping_image[self.direction]
+                        self.image = load_image(image_name, -1)
+                        self.image = pygame.transform.scale(self.image, (2 * TILE_SIZE, 2 * TILE_SIZE))
+                        self.rect = self.rect.move(self.delta_jump_x, self.delta_jump_y)
+                        self.count_rise -= 1
+                    else:
+                        self.reach_higher_point = False
+                        self.jump = False
+                        self.delta_jump_x = 0
+                        self.image = load_image(self.standing_image[self.direction], -1)
+                        self.image = pygame.transform.scale(self.image, (2 * TILE_SIZE, 2 * TILE_SIZE))
+            self.count_iteration_jump += 1
 
 
 class Tile(pygame.sprite.Sprite):
@@ -150,11 +212,15 @@ if __name__ == '__main__':
 
     clock = pygame.time.Clock()
     running = True
+
     move_left_long = False
     move_right_long = False
+    jump_long = False
+
     while running:
         move_left = False
         move_right = False
+        jump = False
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -164,23 +230,31 @@ if __name__ == '__main__':
                     move_left_long = True
                 if event.key == pygame.K_RIGHT:
                     move_right_long = True
+                # if event.key == pygame.K_z:
+                #     jump_long = True
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT:
                     move_left_long = False
                 if event.key == pygame.K_RIGHT:
                     move_right_long = False
+                # if event.type == pygame.K_z:
+                #     jump_long = False
 
             keys = pygame.key.get_pressed()
             if keys[pygame.K_LEFT]:
                 move_left = True
             if keys[pygame.K_RIGHT]:
                 move_right = True
+            if keys[pygame.K_z]:
+                jump = True
 
         if move_right_long:
             player_group.update("right")
         if move_left_long:
             player_group.update("left")
+        if jump:
+            player_group.update("jump")
 
         camera.update(player)
         for sprite in all_sprites:
