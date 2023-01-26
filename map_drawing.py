@@ -33,7 +33,7 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
         self.direction = "left"
 
         # self.delta_jump = 100
-        self.delta = 0
+        self.delta_walk = 0
         self.delta_jump_y = 20
         self.delta_jump_x = 0
 
@@ -54,7 +54,22 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
         self.image = pygame.transform.scale(self.image, (2 * TILE_SIZE, 2 * TILE_SIZE))
         self.rect = self.image.get_rect().move(self.position_x, self.position_y)
 
+    def stump_collision_walk(self):
+        if not pygame.sprite.spritecollideany(self, stump_group):
+            self.rect = self.rect.move(self.delta_walk, 0)
+            collision = pygame.sprite.spritecollideany(self, stump_group)
+            self.rect = self.rect.move(-self.delta_walk, 0)
+            if collision:
+                if collision.rect.x < self.rect.x and self.direction == "left":
+                    self.delta_walk = collision.rect.x + collision.rect.w - self.rect.x
+                if collision.rect.x > self.rect.x and self.direction == "right":
+                    self.delta_walk = collision.rect.x - (self.rect.x + self.rect.w)
+
+    def stump_collision_jump(self):
+        pass
+
     def check_stump_collision(self):
+        self.rect = self.rect.move(self.delta_walk, 0)
         collision = pygame.sprite.spritecollideany(self, stump_group)
         if collision:
             if self.move_right_left:
@@ -63,7 +78,12 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
                 if collision.rect.x > self.rect.x and self.direction == "right":
                     self.move_right_left = False
             if self.jump:
-                if collision.rect.y <= self.rect.y + self.rect.h <= collision.rect.y + collision.rect.h:
+                print(collision.rect.x, self.rect.x + self.rect.w)
+                if collision.rect.y + collision.rect.h == self.rect.y + self.rect.h:
+                    pass
+                if collision.rect.y < self.rect.y + self.rect.h < collision.rect.y + collision.rect.h and \
+                        collision.rect.x != self.rect.x + self.rect.w:
+                    self.jump = False
                     self.return_to_the_ground()
                 # if collision.rect.y <= self.rect.y + self.rect.h < collision.rect.y + collision.rect.h:
                 #     self.jump = False
@@ -74,6 +94,7 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
 
     def return_to_the_ground(self):
         delta = self.standing_position_y - self.rect.y
+        print(delta)
         self.rect = self.rect.move(0, delta)
         image_name = self.standing_image[self.direction]
         self.image = load_image(image_name, -1)
@@ -85,7 +106,7 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
             self.change_image(self.walking_image[self.direction][current_image])
             self.count_iteration_left_right += 1
         if self.count_iteration_left_right == 2:
-            self.rect = self.rect.move(self.delta, 0)
+            self.rect = self.rect.move(self.delta_walk, 0)
             self.move_right_left = False
             self.count_iteration_left_right = 0
         self.count_loop += 1
@@ -122,16 +143,17 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
             else:
                 self.move_right_left = True
                 if move_event == "right":
-                    self.delta = 20
+                    self.delta_walk = 20
                 elif move_event == "left":
-                    self.delta = -20
+                    self.delta_walk = -20
 
         if move_event == "jump":
             self.jump = True
 
-        self.check_stump_collision()
+        self.stump_collision_walk()
 
         if self.move_right_left:
+            print(self.delta_walk)
             self.moving_forward_backward()
 
         if self.jump:
