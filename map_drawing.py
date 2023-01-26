@@ -44,6 +44,7 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
 
         self.position_x = position_x * TILE_SIZE
         self.position_y = position_y * TILE_SIZE
+        self.standing_position_y = 7 * TILE_SIZE
 
         self.standing_image = images_creation.get_scrooge_standing_images()
         self.walking_image = images_creation.get_scrooge_walking_images()
@@ -67,74 +68,74 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
                 # if collision.rect.y <= self.rect.y + self.rect.h < collision.rect.y + collision.rect.h:
                 #     self.jump = False
 
+    def change_image(self, image_name):
+        self.image = load_image(image_name, -1)
+        self.image = pygame.transform.scale(self.image, (100, 100))
+
     def return_to_the_ground(self):
-        print(self.rect.y, TILE_SIZE * 10)
-        delta = self.rect.y - 10 * TILE_SIZE - self.rect.h
-        print(delta)
+        delta = self.standing_position_y - self.rect.y
         self.rect = self.rect.move(0, delta)
         image_name = self.standing_image[self.direction]
         self.image = load_image(image_name, -1)
         self.image = pygame.transform.scale(self.image, (2 * TILE_SIZE, 2 * TILE_SIZE))
 
+    def moving_forward_backward(self):
+        if self.count_loop % 8 == 0:
+            current_image = self.count_iteration_left_right % len(self.walking_image[self.direction])
+            self.change_image(self.walking_image[self.direction][current_image])
+            self.count_iteration_left_right += 1
+        if self.count_iteration_left_right == 2:
+            self.rect = self.rect.move(self.delta, 0)
+            self.move_right_left = False
+            self.count_iteration_left_right = 0
+        self.count_loop += 1
+
+    def jumping(self):
+        if self.count_iteration_jump % 4 == 0:
+            if not self.reach_higher_point:
+                if self.count_rise < 10:
+                    self.change_image(self.jumping_image[self.direction])
+                    self.rect = self.rect.move(self.delta_jump_x, -self.delta_jump_y)
+                    self.count_rise += 1
+                else:
+                    self.reach_higher_point = True
+            else:
+                if self.count_rise > 0:
+                    self.change_image(self.jumping_image[self.direction])
+                    self.rect = self.rect.move(self.delta_jump_x, self.delta_jump_y)
+                    self.count_rise -= 1
+                else:
+                    self.reach_higher_point = False
+                    self.jump = False
+                    self.delta_jump_x = 0
+                    self.change_image(self.standing_image[self.direction])
+        self.count_iteration_jump += 1
+
     def update(self, move_event=None):
         if move_event in ["left", "right"]:
+            self.direction = move_event
             if self.jump:
-                self.direction = move_event
                 if move_event == "right":
                     self.delta_jump_x = 10
                 elif move_event == "left":
                     self.delta_jump_x = -10
             else:
+                self.move_right_left = True
                 if move_event == "right":
-                    self.move_right_left = True
-                    self.direction = "right"
                     self.delta = 20
                 elif move_event == "left":
-                    self.move_right_left = True
-                    self.direction = "left"
                     self.delta = -20
+
         if move_event == "jump":
             self.jump = True
 
         self.check_stump_collision()
+
         if self.move_right_left:
-            if self.count_loop % 8 == 0:
-                current_image = self.count_iteration_left_right % len(self.walking_image[self.direction])
-                image_name = self.walking_image[self.direction][current_image]
-                self.image = load_image(image_name, -1)
-                self.image = pygame.transform.scale(self.image, (100, 100))
-                self.count_iteration_left_right += 1
-            if self.count_iteration_left_right == 2:
-                self.rect = self.rect.move(self.delta, 0)
-                self.move_right_left = False
-                self.count_iteration_left_right = 0
-            self.count_loop += 1
+            self.moving_forward_backward()
 
         if self.jump:
-            if self.count_iteration_jump % 4 == 0:
-                if not self.reach_higher_point:
-                    if self.count_rise < 10:
-                        image_name = self.jumping_image[self.direction]
-                        self.image = load_image(image_name, -1)
-                        self.image = pygame.transform.scale(self.image, (2 * TILE_SIZE, 2 * TILE_SIZE))
-                        self.rect = self.rect.move(self.delta_jump_x, -self.delta_jump_y)
-                        self.count_rise += 1
-                    else:
-                        self.reach_higher_point = True
-                else:
-                    if self.count_rise > 0:
-                        image_name = self.jumping_image[self.direction]
-                        self.image = load_image(image_name, -1)
-                        self.image = pygame.transform.scale(self.image, (2 * TILE_SIZE, 2 * TILE_SIZE))
-                        self.rect = self.rect.move(self.delta_jump_x, self.delta_jump_y)
-                        self.count_rise -= 1
-                    else:
-                        self.reach_higher_point = False
-                        self.jump = False
-                        self.delta_jump_x = 0
-                        self.image = load_image(self.standing_image[self.direction], -1)
-                        self.image = pygame.transform.scale(self.image, (2 * TILE_SIZE, 2 * TILE_SIZE))
-            self.count_iteration_jump += 1
+            self.jumping()
 
 
 class Tile(pygame.sprite.Sprite):
