@@ -25,8 +25,8 @@ def get_scrooge_walking_images():
 
 def get_scrooge_jumping_images():
     image = Image.open("data/scrooge_sheet.png")
-    image.crop((189, 0, 215, 32)).save("data/jumping_left.png")
-    image.crop((214, 0, 240, 32)).save("data/jumping_right.png")
+    image.crop((189, 2, 215, 29)).save("data/jumping_left.png")
+    image.crop((214, 2, 240, 29)).save("data/jumping_right.png")
     return {"right": "jumping_right.png", "left": "jumping_left.png"}
 
 

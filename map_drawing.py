@@ -32,7 +32,6 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
         self.reach_higher_point = False
         self.direction = "left"
 
-        # self.delta_jump = 100
         self.delta_walk = 0
         self.delta_jump_y = 20
         self.delta_jump_x = 0
@@ -66,7 +65,35 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
                     self.delta_walk = collision.rect.x - (self.rect.x + self.rect.w)
 
     def stump_collision_jump(self):
-        pass
+        print("JUMPING", self.jump)
+        # collision = find_collision(self, stump_group)
+        # if collision:
+        #     if collision.rect.x < self.rect.x and self.direction == "left":
+        #         if collision.rect.y + collision.rect.h == self.rect.y + collision.rect.h and \
+        #                 collision.rect.x + collision.rect.w == self.rect.x:
+        #             pass
+        #         elif collision.rect.x + collision.rect.w == self.rect.x
+        #             print("YESS")
+        self.rect = self.rect.move(self.delta_jump_x, self.delta_jump_y)
+        collision = find_collision(self, stump_group)
+        self.rect = self.rect.move(-self.delta_jump_x, -self.delta_jump_y)
+        if collision:
+            if collision.rect.x < self.rect.x < collision.rect.x + collision.rect.w:
+                print(collision.rect.y, self.rect.y, collision.rect.x, self.rect.x)
+                if collision.rect.y <= self.rect.y + self.rect.h \
+                        < collision.rect.y + self.delta_jump_y:
+                    self.delta_jump_y = collision.rect.y - self.rect.y - self.rect.h
+                    print("ccccccccccccccccc" + str(self.delta_jump_y))
+                    # print(self.delta_jump_y)
+                    self.rect = self.rect.move(0, self.delta_jump_y)
+                    self.jump = False
+                    self.move_right_left = False
+                elif self.rect.y < collision.rect.y:
+                    pass
+                else:
+                    self.delta_jump_x = collision.rect.x + collision.rect.w - self.rect.x
+                    self.rect = self.rect.move(self.delta_jump_x, 0)
+                    self.delta_jump_x = 0
 
     def check_stump_collision(self):
         self.rect = self.rect.move(self.delta_walk, 0)
@@ -78,7 +105,6 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
                 if collision.rect.x > self.rect.x and self.direction == "right":
                     self.move_right_left = False
             if self.jump:
-                print(collision.rect.x, self.rect.x + self.rect.w)
                 if collision.rect.y + collision.rect.h == self.rect.y + self.rect.h:
                     pass
                 if collision.rect.y < self.rect.y + self.rect.h < collision.rect.y + collision.rect.h and \
@@ -153,10 +179,10 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
         self.stump_collision_walk()
 
         if self.move_right_left:
-            print(self.delta_walk)
             self.moving_forward_backward()
 
         if self.jump:
+            self.stump_collision_jump()
             self.jumping()
 
 
@@ -171,6 +197,24 @@ class Tile(pygame.sprite.Sprite):
         else:
             self.image = pygame.transform.scale(self.image, (TILE_SIZE, TILE_SIZE))
         self.rect = self.image.get_rect().move(TILE_SIZE * pos_x, TILE_SIZE * pos_y)
+
+
+def find_collision(current_object, group):
+    x_1 = current_object.rect.x
+    y_1 = current_object.rect.y
+    width_1 = current_object.rect.w
+    height_1 = current_object.rect.h
+    for elem in group:
+        x_2 = elem.rect.x
+        y_2 = elem.rect.y
+        width_2 = elem.rect.w
+        height_2 = elem.rect.h
+        if ((x_1 <= x_2 <= (x_1 + width_1)) and (y_1 <= y_2 <= (y_1 + height_1))) or \
+                ((x_2 <= x_1 <= (x_2 + width_2)) and (y_2 <= y_1 <= (y_2 + height_2))) or \
+                ((x_2 <= x_1 <= (x_2 + width_2)) and (y_1 <= y_2 <= (y_1 + height_1))) or \
+                ((x_1 <= x_2 <= (x_1 + width_1)) and (y_2 <= y_1 <= (y_2 + height_2))):
+            return elem
+    return False
 
 
 def load_image(name, colorkey=None):
