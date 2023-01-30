@@ -83,6 +83,7 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
                     self.rect = self.rect.move(0, self.delta_jump_y)
                     self.jump = False
                     self.move_right_left = False
+                    self.change_image(self.standing_image[self.direction])
 
     def change_image(self, image_name):
         self.image = load_image(image_name, -1)
