@@ -65,7 +65,6 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
                     self.delta_walk = collision.rect.x - (self.rect.x + self.rect.w)
 
     def stump_collision_jump(self):
-        print("JUMPING", self.jump)
         # collision = find_collision(self, stump_group)
         # if collision:
         #     if collision.rect.x < self.rect.x and self.direction == "left":
@@ -77,23 +76,44 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
         self.rect = self.rect.move(self.delta_jump_x, self.delta_jump_y)
         collision = find_collision(self, stump_group)
         self.rect = self.rect.move(-self.delta_jump_x, -self.delta_jump_y)
+        # if collision:
+        #     if collision.rect.x < self.rect.x < collision.rect.x + collision.rect.w:
+        #         print(collision.rect.y, self.rect.y, collision.rect.x, self.rect.x)
+        #         if collision.rect.y <= self.rect.y + self.rect.h \
+        #                 < collision.rect.y + self.delta_jump_y:
+        #             self.delta_jump_y = collision.rect.y - self.rect.y - self.rect.h
+        #             print("ccccccccccccccccc" + str(self.delta_jump_y))
+        #             # print(self.delta_jump_y)
+        #             self.rect = self.rect.move(0, self.delta_jump_y)
+        #             self.jump = False
+        #             self.move_right_left = False
+        #         elif self.rect.y < collision.rect.y:
+        #             pass
+        #         else:
+        #             self.delta_jump_x = collision.rect.x + collision.rect.w - self.rect.x
+        #             self.rect = self.rect.move(self.delta_jump_x, 0)
+        #             self.delta_jump_x = 0
         if collision:
-            if collision.rect.x < self.rect.x < collision.rect.x + collision.rect.w:
-                print(collision.rect.y, self.rect.y, collision.rect.x, self.rect.x)
-                if collision.rect.y <= self.rect.y + self.rect.h \
-                        < collision.rect.y + self.delta_jump_y:
-                    self.delta_jump_y = collision.rect.y - self.rect.y - self.rect.h
-                    print("ccccccccccccccccc" + str(self.delta_jump_y))
-                    # print(self.delta_jump_y)
-                    self.rect = self.rect.move(0, self.delta_jump_y)
-                    self.jump = False
-                    self.move_right_left = False
-                elif self.rect.y < collision.rect.y:
-                    pass
-                else:
+            if collision.rect.y + self.delta_jump_y < self.rect.y + self.rect.h < collision.rect.y + collision.rect.h:
+                print("start")
+                if collision.rect.x + collision.rect.w - 2 * self.delta_jump_x <= self.rect.x <= \
+                        collision.rect.x + collision.rect.w:
+                    print(1)
                     self.delta_jump_x = collision.rect.x + collision.rect.w - self.rect.x
                     self.rect = self.rect.move(self.delta_jump_x, 0)
                     self.delta_jump_x = 0
+            if collision.rect.y <= self.rect.y + self.rect.h <= collision.rect.y + self.delta_jump_y:
+                print(2)
+                if collision.rect.x <= self.rect.x <= collision.rect.x + collision.rect.w:
+                    self.delta_jump_y = collision.rect.y - self.rect.y - self.rect.h
+                    self.rect = self.rect.move(0, self.delta_jump_y)
+                    self.jump = False
+                    self.move_right_left = False
+                elif collision.rect.x <= self.rect.x + self.rect.w <= collision.rect.x + collision.rect.w:
+                    self.delta_jump_y = collision.rect.y - self.rect.y - self.rect.h
+                    self.rect = self.rect.move(0, self.delta_jump_y)
+                    self.jump = False
+                    self.move_right_left = False
 
     def check_stump_collision(self):
         self.rect = self.rect.move(self.delta_walk, 0)
