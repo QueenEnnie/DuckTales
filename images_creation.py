@@ -74,10 +74,15 @@ def get_sky_colour():
 #     colour = image.get_at((0, 0))
 #     return colour[0], colour[1], colour[3]
 
+def get_gorilla_images():
+    image = Image.open("data/enemies_sheet.png")
+    image.crop((6, 3, 34, 34)).save("data/gorilla_walking_1.png")
+
 
 get_amazon_landscapes_images()
 get_scrooge_jumping_images()
 get_scrooge_walking_images()
+get_gorilla_images()
 
 
 
