@@ -146,6 +146,7 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
         self.count_loop += 1
 
     def jumping(self):
+        self.delta_jump_y = 20
         if self.count_iteration_jump % 4 == 0:
             if not self.reach_higher_point:
                 if self.count_rise < 10:
@@ -169,11 +170,14 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
     def update(self, move_event=None):
         if move_event in ["left", "right"]:
             self.direction = move_event
+            # self.move_right_left = True
             if self.jump:
                 if move_event == "right":
                     self.delta_jump_x = 10
                 elif move_event == "left":
                     self.delta_jump_x = -10
+                self.delta_jump_y = 20
+                self.reach_higher_point = False
             else:
                 self.move_right_left = True
                 if move_event == "right":

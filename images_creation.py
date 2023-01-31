@@ -37,17 +37,18 @@ def get_amazon_landscapes_images():
     image.crop((0, 31, 16, 48)).save("data/middle_grass.png")
 
     image = Image.open("data/DuckTalesMap1.png")
-    # image.crop((1025, 1362, 1055, 1392)).save("data/stump.png")
     image.crop((1019, 1360, 1061, 1392)).save("data/stump.png")
     image.crop((9, 1408, 26, 1424)).save("data/earth.png")
     image.crop((0, 1200, 32, 1232)).save("data/leaves.png")
+    image.crop((720, 1376, 736, 1392)).save("data/rock.png")
 
     amazon_images = {"G": "grass.png",
                      "T": "trunk.png",
                      "M": "middle_grass.png",
                      "S": "stump.png",
                      "E": "earth.png",
-                     "L": "leaves.png"}
+                     "L": "leaves.png",
+                     "R": "rock.png"}
     return amazon_images
 
 
@@ -81,7 +82,6 @@ def get_gorilla_images():
     image.crop((63, 3, 87, 34)).save("data/gorilla_defeated.png")
     return {"walking": ["gorilla_walking_1.png", "gorilla_walking_2.png"],
             "defeated": "gorilla_defeated.png"}
-
 
 
 get_amazon_landscapes_images()
