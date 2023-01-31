@@ -197,6 +197,24 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
             self.return_on_the_ground()
 
 
+class GorillaEnemy(pygame.sprite.Sprite):
+    def __init__(self, position_x, position_y):
+        super().__init__(enemy_group, all_sprites)
+
+        self.walking_images = images_creation.get_gorilla_images()["walking"]
+        self.defeated_image = images_creation.get_gorilla_images()["defeated"]
+
+        self.position_x = position_x * TILE_SIZE
+        self.position_y = position_y * TILE_SIZE
+
+        self.image = load_image(self.walking_images[0], -1)
+        self.image = pygame.transform.scale(self.image, (2 * TILE_SIZE, 2 * TILE_SIZE))
+        self.rect = self.image.get_rect().move(self.position_x, self.position_y)
+
+    def update(self, move_event=None):
+        pass
+
+
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tiles_group, all_sprites)
@@ -284,6 +302,8 @@ if __name__ == '__main__':
     all_sprites = pygame.sprite.Group()
     tiles_group = pygame.sprite.Group()
     player_group = pygame.sprite.Group()
+    enemy_group = pygame.sprite.Group()
+    # gorilla group creation???
     stump_group = pygame.sprite.Group()
 
     player = level_generation()

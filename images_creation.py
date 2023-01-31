@@ -77,6 +77,11 @@ def get_sky_colour():
 def get_gorilla_images():
     image = Image.open("data/enemies_sheet.png")
     image.crop((6, 3, 34, 34)).save("data/gorilla_walking_1.png")
+    image.crop((35, 3, 59, 34)).save("data/gorilla_walking_2.png")
+    image.crop((63, 3, 87, 34)).save("data/gorilla_defeated.png")
+    return {"walking": ["gorilla_walking_1.png", "gorilla_walking_2.png"],
+            "defeated": "gorilla_defeated.png"}
+
 
 
 get_amazon_landscapes_images()
