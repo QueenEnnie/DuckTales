@@ -13,12 +13,12 @@ def get_scrooge_standing_images():
 
 def get_scrooge_walking_images():
     image = Image.open("data/scrooge_sheet.png")
-    image.crop((50, 0, 75, 32)).save("data/walking_left_1.png")
-    image.crop((0, 0, 26, 32)).save("data/walking_left_2.png")
+    image.crop((50, 2, 75, 31)).save("data/walking_left_1.png")
+    image.crop((0, 2, 26, 31)).save("data/walking_left_2.png")
     # image.crop((75, 0, 97, 32)).save("data/walking_left_2.png")
     # image.crop((96, 0, 121, 32)).save("data/walking_left_3.png")
-    image.crop((120, 0, 145, 32)).save("data/walking_right_1.png")
-    image.crop((25, 0, 51, 32)).save("data/walking_right_2.png")
+    image.crop((120, 2, 145, 31)).save("data/walking_right_1.png")
+    image.crop((25, 2, 51, 31)).save("data/walking_right_2.png")
     return {"left": ["walking_left_1.png", "walking_left_2.png"],
             "right": ["walking_right_1.png", "walking_right_2.png"]}
 
@@ -77,6 +77,7 @@ def get_sky_colour():
 
 get_amazon_landscapes_images()
 get_scrooge_jumping_images()
+get_scrooge_walking_images()
 
 
 
