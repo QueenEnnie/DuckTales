@@ -95,6 +95,7 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
                     self.jump = False
                     self.move_right_left = False
                     self.move_on_the_stump = True
+                    self.count_rise = 0
                     self.change_image(self.standing_image[self.direction])
 
         elif collision and collision.rect.x > self.rect.x and self.direction == "right":
@@ -113,6 +114,7 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
                     self.jump = False
                     self.move_right_left = False
                     self.move_on_the_stump = True
+                    self.count_rise = 0
                     self.change_image(self.standing_image[self.direction])
 
     def return_on_the_ground(self):
@@ -205,18 +207,33 @@ class GorillaEnemy(pygame.sprite.Sprite):
     def __init__(self, position_x, position_y):
         super().__init__(enemy_group, all_sprites)
 
-        self.walking_images = images_creation.get_gorilla_images()["walking"]
+        self.delta_walk = -20
+        self.count_loop = 0
+        self.count_movement = 0
+
+        self.walking_image = images_creation.get_gorilla_images()["walking"]
         self.defeated_image = images_creation.get_gorilla_images()["defeated"]
 
         self.position_x = position_x * TILE_SIZE
         self.position_y = position_y * TILE_SIZE
 
-        self.image = load_image(self.walking_images[0], -1)
+        self.image = load_image(self.walking_image[0], -1)
         self.image = pygame.transform.scale(self.image, (2 * TILE_SIZE, 2 * TILE_SIZE))
         self.rect = self.image.get_rect().move(self.position_x, self.position_y)
 
+    def change_image(self, image_name):
+        self.image = load_image(image_name, -1)
+        self.image = pygame.transform.scale(self.image, (100, 100))
+
     def update(self, move_event=None):
-        pass
+        if self.count_loop % 8 == 0:
+            current_image = self.count_movement % len(self.walking_image)
+            self.change_image(self.walking_image[current_image])
+            self.count_movement += 1
+        if self.count_movement == 2:
+            self.rect = self.rect.move(self.delta_walk, 0)
+            self.count_movement = 0
+        self.count_loop += 1
 
 
 class Tile(pygame.sprite.Sprite):
@@ -286,6 +303,9 @@ def level_generation():
             if level_map[y][x] == "P":
                 player = ScroogeMcDuck(x, y)
                 player_group.add(player)
+            elif level_map[y][x] == "A":
+                enemy = GorillaEnemy(x, y)
+                enemy_group.add(enemy)
             else:
                 if level_map[y][x] != ".":
                     Tile(level_map[y][x], x, y)
@@ -363,9 +383,13 @@ if __name__ == '__main__':
             camera.apply(sprite)
 
         screen.fill(sky_colour)
+
         player_group.update()
+        enemy_group.update()
+
         all_sprites.draw(screen)
         player_group.draw(screen)
+        enemy_group.draw(screen)
         pygame.display.flip()
         clock.tick(FPS)
     pygame.quit()
