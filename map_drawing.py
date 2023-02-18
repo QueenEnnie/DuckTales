@@ -205,7 +205,8 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
 
 class GorillaEnemy(pygame.sprite.Sprite):
     def __init__(self, position_x, position_y):
-        super().__init__(enemy_group, all_sprites)
+        # super().__init__(enemy_group, all_sprites)
+        super().__init__(enemy_group)
 
         self.delta_walk = -20
         self.count_loop = 0
@@ -304,8 +305,9 @@ def level_generation():
                 player = ScroogeMcDuck(x, y)
                 player_group.add(player)
             elif level_map[y][x] == "A":
-                enemy = GorillaEnemy(x, y)
-                enemy_group.add(enemy)
+                pass
+                # enemy = GorillaEnemy(x, y)
+                # enemy_group.add(enemy)
             else:
                 if level_map[y][x] != ".":
                     Tile(level_map[y][x], x, y)
@@ -385,11 +387,11 @@ if __name__ == '__main__':
         screen.fill(sky_colour)
 
         player_group.update()
-        enemy_group.update()
+        # enemy_group.update()
 
         all_sprites.draw(screen)
         player_group.draw(screen)
-        enemy_group.draw(screen)
+        # enemy_group.draw(screen)
         pygame.display.flip()
         clock.tick(FPS)
     pygame.quit()
