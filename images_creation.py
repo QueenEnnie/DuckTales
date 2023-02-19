@@ -41,6 +41,8 @@ def get_amazon_landscapes_images():
     image.crop((9, 1408, 26, 1424)).save("data/earth.png")
     image.crop((0, 1200, 32, 1232)).save("data/leaves.png")
     image.crop((720, 1376, 736, 1392)).save("data/rock.png")
+    image.crop((720, 1376, 736, 1392)).save("data/thorn.png")
+
 
     amazon_images = {"G": "grass.png",
                      "T": "trunk.png",
@@ -48,7 +50,8 @@ def get_amazon_landscapes_images():
                      "S": "stump.png",
                      "E": "earth.png",
                      "L": "leaves.png",
-                     "R": "rock.png"}
+                     "R": "rock.png",
+                     "H": "thorn.png"}
     return amazon_images
 
 

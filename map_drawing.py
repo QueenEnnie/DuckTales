@@ -75,6 +75,9 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
                     self.delta_walk = collision.rect.x - (self.rect.x + self.rect.w)
 
     def stump_collision_jump(self):
+        if self.move_on_the_stump:
+            return
+
         self.rect = self.rect.move(self.delta_jump_x, self.delta_jump_y)
         collision = find_collision(self, stump_group)
         self.rect = self.rect.move(-self.delta_jump_x, -self.delta_jump_y)
@@ -86,6 +89,7 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
                 self.rect = self.rect.move(self.delta_jump_x, 0)
                 self.delta_jump_x = 0
                 self.reach_higher_point = True
+                self.count_rise = 0
             if collision.rect.y <= self.rect.y + self.rect.h <= collision.rect.y + self.delta_jump_y:
                 if collision.rect.x <= self.rect.x <= collision.rect.x + collision.rect.w or \
                         collision.rect.x <= self.rect.x + self.rect.w <= \
@@ -95,6 +99,7 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
                     self.jump = False
                     self.move_right_left = False
                     self.move_on_the_stump = True
+                    self.reach_higher_point = False
                     self.count_rise = 0
                     self.change_image(self.standing_image[self.direction])
 
@@ -104,7 +109,8 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
                 self.delta_jump_x = collision.rect.x - self.rect.x - self.rect.w
                 self.rect = self.rect.move(self.delta_jump_x, 0)
                 self.delta_jump_x = 0
-                self.reach_higher_point = True
+                self.reach_higher_point = False
+                self.count_rise = 0
             if collision.rect.y <= self.rect.y + self.rect.h <= collision.rect.y + self.delta_jump_y:
                 if collision.rect.x <= self.rect.x <= collision.rect.x + collision.rect.w or \
                         collision.rect.x <= self.rect.x + self.rect.w <= \
@@ -114,6 +120,7 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
                     self.jump = False
                     self.move_right_left = False
                     self.move_on_the_stump = True
+                    self.reach_higher_point = False
                     self.count_rise = 0
                     self.change_image(self.standing_image[self.direction])
 
@@ -129,7 +136,8 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
             self.count_iteration_return_ground += 1
         else:
             self.count_iteration_return_ground += 1
-        if self.rect.y == 7 * TILE_SIZE:
+
+        if find_collision(self, grass_group):
             self.return_from_stump_on_the_ground = False
 
     def change_image(self, image_name):
@@ -158,15 +166,19 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
                 else:
                     self.reach_higher_point = True
             else:
-                if self.count_rise > 0:
+                self.rect = self.rect.move(self.delta_jump_x, self.delta_jump_y)
+                collision = find_collision(self, grass_group)
+                self.rect = self.rect.move(-self.delta_jump_x, -self.delta_jump_y)
+                if not collision:
                     self.change_image(self.jumping_image[self.direction])
                     self.rect = self.rect.move(self.delta_jump_x, self.delta_jump_y)
-                    self.count_rise -= 1
                 else:
+                    self.rect = self.rect.move(self.delta_jump_x, self.delta_jump_y)
                     self.reach_higher_point = False
                     self.jump = False
                     self.delta_jump_x = 0
                     self.change_image(self.standing_image[self.direction])
+                    self.count_rise = 0
         self.count_iteration_jump += 1
 
     def update(self, move_event=None):
@@ -194,6 +206,9 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
 
         if self.move_right_left:
             self.moving_forward_backward()
+
+        if self.move_on_the_stump:
+            self.jump = False
 
         if self.jump:
             self.stump_collision_jump()
@@ -245,6 +260,10 @@ class Tile(pygame.sprite.Sprite):
             self.image = pygame.transform.scale(self.image, (3 * TILE_SIZE, 2 * TILE_SIZE))
             pos_y -= 1
             self.add(stump_group)
+        elif tile_type == "H":
+            self.image = pygame.transform.scale(self.image, (1 * TILE_SIZE, 2 * TILE_SIZE))
+            pos_y -= 1
+            # self.add(stump_group)
         else:
             self.image = pygame.transform.scale(self.image, (TILE_SIZE, TILE_SIZE))
         self.rect = self.image.get_rect().move(TILE_SIZE * pos_x, TILE_SIZE * pos_y)
@@ -304,6 +323,9 @@ def level_generation():
             if level_map[y][x] == "P":
                 player = ScroogeMcDuck(x, y)
                 player_group.add(player)
+            elif level_map[y][x] == "M":
+                grass = Tile(level_map[y][x], x, y)
+                grass_group.add(grass)
             elif level_map[y][x] == "A":
                 pass
                 # enemy = GorillaEnemy(x, y)
@@ -331,6 +353,7 @@ if __name__ == '__main__':
     enemy_group = pygame.sprite.Group()
     # gorilla group creation???
     stump_group = pygame.sprite.Group()
+    grass_group = pygame.sprite.Group()
 
     player = level_generation()
 
