@@ -86,10 +86,18 @@ def get_gorilla_images():
             "defeated": "gorilla_defeated.png"}
 
 
+def lives():
+    image = Image.open("data/info_sheet.png")
+    image.crop((2, 138, 9, 145)).save("data/lost_health.png")
+    image.crop((2, 146, 9, 153)).save("data/full_health.png")
+    return {"lost": "lost_health.png", "full": "full_health.png"}
+
+
 get_amazon_landscapes_images()
 get_scrooge_jumping_images()
 get_scrooge_walking_images()
 get_gorilla_images()
+lives()
 
 
 

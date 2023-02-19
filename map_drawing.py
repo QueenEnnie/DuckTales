@@ -1,10 +1,10 @@
 import pygame
 import sys
 import os
-import images_creation
+from images_creation import *
 
-WIDTH, HEIGHT = 1000, 600
-TILES_IMAGES = images_creation.get_amazon_landscapes_images()
+WIDTH, HEIGHT = 1000, 700
+TILES_IMAGES = get_amazon_landscapes_images()
 TILE_SIZE = 50
 FPS = 60
 
@@ -48,9 +48,9 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
         self.position_y = position_y * TILE_SIZE
         self.standing_position_y = 7 * TILE_SIZE
 
-        self.standing_image = images_creation.get_scrooge_standing_images()
-        self.walking_image = images_creation.get_scrooge_walking_images()
-        self.jumping_image = images_creation.get_scrooge_jumping_images()
+        self.standing_image = get_scrooge_standing_images()
+        self.walking_image = get_scrooge_walking_images()
+        self.jumping_image = get_scrooge_jumping_images()
 
         self.image = load_image(self.standing_image["left"], -1)
         self.image = pygame.transform.scale(self.image, (2 * TILE_SIZE, 2 * TILE_SIZE))
@@ -227,8 +227,8 @@ class GorillaEnemy(pygame.sprite.Sprite):
         self.count_loop = 0
         self.count_movement = 0
 
-        self.walking_image = images_creation.get_gorilla_images()["walking"]
-        self.defeated_image = images_creation.get_gorilla_images()["defeated"]
+        self.walking_image = get_gorilla_images()["walking"]
+        self.defeated_image = get_gorilla_images()["defeated"]
 
         self.position_x = position_x * TILE_SIZE
         self.position_y = position_y * TILE_SIZE
@@ -321,10 +321,10 @@ def level_generation():
     for y in range(len(level_map)):
         for x in range(len(level_map[y])):
             if level_map[y][x] == "P":
-                player = ScroogeMcDuck(x, y)
+                player = ScroogeMcDuck(x, y + 2)
                 player_group.add(player)
             elif level_map[y][x] == "M":
-                grass = Tile(level_map[y][x], x, y)
+                grass = Tile(level_map[y][x], x, y + 2)
                 grass_group.add(grass)
             elif level_map[y][x] == "A":
                 pass
@@ -332,17 +332,68 @@ def level_generation():
                 # enemy_group.add(enemy)
             else:
                 if level_map[y][x] != ".":
-                    Tile(level_map[y][x], x, y)
+                    Tile(level_map[y][x], x, y + 2)
     return player
+
+
+def start_screen():
+    image = pygame.transform.scale(load_image('screensaver.jpeg'), (WIDTH, HEIGHT))
+    screen.blit(image, (0, 0))
+
+    clock = pygame.time.Clock()
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            elif event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                return
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
+def lives_and_score():
+    intro_text = ["Перемещение героя", "",
+                  "Герой двигается",
+                  "Карта на месте"]
+    image = pygame.Surface([WIDTH, 2 * TILE_SIZE])
+    image.fill(pygame.Color("black"))
+    screen.blit(image, (0, 0))
+
+    font = pygame.font.Font(None, 50)
+    string_rendered = font.render("89", True, pygame.Color("white"))
+    string_rect = string_rendered.get_rect()
+    string_rect.top = TILE_SIZE // 2
+    string_rect.x = WIDTH // 4
+    screen.blit(string_rendered, string_rect)
+
+    # fon = pygame.transform.scale(load_image('fon.jpg'), (WIDTH, HEIGHT))
+    # screen.blit(fon, (0, 0))
+    # font = pygame.font.Font(None, 30)
+    # text_coord = 50
+    # for line in intro_text:
+    #     string_rendered = font.render(line, True, pygame.Color("black"))
+    #     string_rect = string_rendered.get_rect()
+    #     text_coord += 10
+    #     string_rect.top = text_coord
+    #     string_rect.x = 10
+    #     text_coord += string_rect.height
+    #     screen.blit(string_rendered, string_rect)
+
+
+def terminate():
+    pygame.quit()
+    sys.exit()
 
 
 if __name__ == '__main__':
     pygame.init()
-    pygame.display.set_caption("move")
+    pygame.display.set_caption("DuckTales")
     size = width, height = WIDTH, HEIGHT
     screen = pygame.display.set_mode(size)
 
-    sky_colour = images_creation.get_sky_colour()
+    start_screen()
+
+    sky_colour = get_sky_colour()
     screen.fill(sky_colour)
 
     camera = Camera()
@@ -408,6 +459,7 @@ if __name__ == '__main__':
             camera.apply(sprite)
 
         screen.fill(sky_colour)
+        lives_and_score()
 
         player_group.update()
         # enemy_group.update()
