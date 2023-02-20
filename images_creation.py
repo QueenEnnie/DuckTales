@@ -87,9 +87,9 @@ def get_gorilla_images():
 
 
 def lives():
-    image = Image.open("data/info_sheet.png")
-    image.crop((2, 138, 9, 145)).save("data/lost_health.png")
-    image.crop((2, 146, 9, 153)).save("data/full_health.png")
+    image = Image.open("data/lives.png")
+    image.crop((760, 255, 830, 320)).save("data/full_health.png")
+    image.crop((845, 255, 915, 320)).save("data/lost_health.png")
     return {"lost": "lost_health.png", "full": "full_health.png"}
 
 

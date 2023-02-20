@@ -27,6 +27,9 @@ class Camera:
 class ScroogeMcDuck(pygame.sprite.Sprite):
     def __init__(self, position_x, position_y):
         super().__init__(player_group, all_sprites)
+
+        self.count_lives = 3
+
         self.move_right_left = False
         self.jump = False
         self.reach_higher_point = False
@@ -352,32 +355,40 @@ def start_screen():
 
 
 def lives_and_score():
-    intro_text = ["Перемещение героя", "",
-                  "Герой двигается",
-                  "Карта на месте"]
-    image = pygame.Surface([WIDTH, 2 * TILE_SIZE])
-    image.fill(pygame.Color("black"))
-    screen.blit(image, (0, 0))
+    black_part = pygame.Surface([WIDTH, 2 * TILE_SIZE])
+    black_part.fill(pygame.Color("black"))
+    screen.blit(black_part, (0, 0))
 
-    font = pygame.font.Font(None, 50)
-    string_rendered = font.render("89", True, pygame.Color("white"))
+    font = pygame.font.Font(None, 46)
+    string_rendered = font.render("HEALTH:", True, pygame.Color("white"))
     string_rect = string_rendered.get_rect()
-    string_rect.top = TILE_SIZE // 2
-    string_rect.x = WIDTH // 4
+    string_rect.top = 35
+    string_rect.x = WIDTH // 10
     screen.blit(string_rendered, string_rect)
 
-    # fon = pygame.transform.scale(load_image('fon.jpg'), (WIDTH, HEIGHT))
-    # screen.blit(fon, (0, 0))
-    # font = pygame.font.Font(None, 30)
-    # text_coord = 50
-    # for line in intro_text:
-    #     string_rendered = font.render(line, True, pygame.Color("black"))
-    #     string_rect = string_rendered.get_rect()
-    #     text_coord += 10
-    #     string_rect.top = text_coord
-    #     string_rect.x = 10
-    #     text_coord += string_rect.height
-    #     screen.blit(string_rendered, string_rect)
+    full_lives = player.count_lives
+    lost_lives = 3 - player.count_lives
+
+    lives_images = lives()
+    lives_x = 250
+    lives_y = 36
+    for i in range(full_lives):
+        image = load_image(lives_images["full"])
+        image = pygame.transform.scale(image, (TILE_SIZE // 2, TILE_SIZE // 2))
+        screen.blit(image, (lives_x, lives_y))
+        lives_x += TILE_SIZE // 2 + 4
+
+    for i in range(lost_lives):
+        image = load_image(lives_images["lost"])
+        image = pygame.transform.scale(image, (TILE_SIZE // 2, TILE_SIZE // 2))
+        screen.blit(image, (lives_x, lives_y))
+        lives_x += TILE_SIZE // 2 + 4
+
+    string_rendered = font.render(f"MONEY: {'40000'}", True, pygame.Color("white"))
+    string_rect = string_rendered.get_rect()
+    string_rect.top = 35
+    string_rect.x = WIDTH // 2 + WIDTH // 10
+    screen.blit(string_rendered, string_rect)
 
 
 def terminate():
