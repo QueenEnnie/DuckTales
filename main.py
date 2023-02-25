@@ -1,6 +1,6 @@
-import pygame
 import sys
 import os
+import pygame
 from images_creation import *
 
 WIDTH, HEIGHT = 1000, 700
@@ -17,11 +17,9 @@ class Camera:
     def apply(self, tile_object):
         tile_object.rect.x += self.delta_x
         tile_object.rect.y += self.delta_y
-        # print(tile_object.rect.x)
 
     def update(self, target):
         self.delta_x = -(target.rect.x + target.rect.w // 2 - width // 2)
-        # self.delta_y = -(target.rect.y + target.rect.h // 2 - height // 2)
 
 
 class ScroogeMcDuck(pygame.sprite.Sprite):
@@ -30,6 +28,7 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
 
         self.count_lives = 3
 
+        self.cane_attack = False
         self.move_right_left = False
         self.jump = False
         self.reach_higher_point = False
@@ -54,6 +53,7 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
         self.standing_image = get_scrooge_standing_images()
         self.walking_image = get_scrooge_walking_images()
         self.jumping_image = get_scrooge_jumping_images()
+        self.images_with_cane = get_scrooge_with_cane_images()
 
         self.image = load_image(self.standing_image["left"], -1)
         self.image = pygame.transform.scale(self.image, (2 * TILE_SIZE, 2 * TILE_SIZE))
@@ -184,6 +184,13 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
                     self.count_rise = 0
         self.count_iteration_jump += 1
 
+    def cane_attacking(self):
+        if self.jump:
+            image_name = self.images_with_cane[self.direction]
+            self.change_image(image_name)
+        else:
+            self.jump = False
+
     def update(self, move_event=None):
         if move_event in ["left", "right"]:
             self.direction = move_event
@@ -205,6 +212,9 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
         if move_event == "jump":
             self.jump = True
 
+        if move_event == "cane_attack":
+            self.cane_attack = True
+
         self.stump_collision_walk()
 
         if self.move_right_left:
@@ -217,13 +227,16 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
             self.stump_collision_jump()
             self.jumping()
 
+        if self.cane_attack:
+            self.cane_attacking()
+
         if self.return_from_stump_on_the_ground:
             self.return_on_the_ground()
 
 
 class GorillaEnemy(pygame.sprite.Sprite):
     def __init__(self, position_x, position_y):
-        # super().__init__(enemy_group, all_sprites)
+        super().__init__(enemy_group, all_sprites)
         super().__init__(enemy_group)
 
         self.delta_walk = -20
@@ -234,7 +247,7 @@ class GorillaEnemy(pygame.sprite.Sprite):
         self.defeated_image = get_gorilla_images()["defeated"]
 
         self.position_x = position_x * TILE_SIZE
-        self.position_y = position_y * TILE_SIZE
+        self.position_y = (position_y + 2) * TILE_SIZE
 
         self.image = load_image(self.walking_image[0], -1)
         self.image = pygame.transform.scale(self.image, (2 * TILE_SIZE, 2 * TILE_SIZE))
@@ -253,6 +266,8 @@ class GorillaEnemy(pygame.sprite.Sprite):
             self.rect = self.rect.move(self.delta_walk, 0)
             self.count_movement = 0
         self.count_loop += 1
+
+
 
 
 class Tile(pygame.sprite.Sprite):
@@ -330,9 +345,9 @@ def level_generation():
                 grass = Tile(level_map[y][x], x, y + 2)
                 grass_group.add(grass)
             elif level_map[y][x] == "A":
-                pass
-                # enemy = GorillaEnemy(x, y)
-                # enemy_group.add(enemy)
+                # pass
+                enemy = GorillaEnemy(x, y)
+                enemy_group.add(enemy)
             else:
                 if level_map[y][x] != ".":
                     Tile(level_map[y][x], x, y + 2)
@@ -422,48 +437,42 @@ if __name__ == '__main__':
     clock = pygame.time.Clock()
     running = True
 
-    move_left_long = False
-    move_right_long = False
-    jump_long = False
+    move_left = False
+    move_right = False
 
     while running:
-        move_left = False
-        move_right = False
         jump = False
+        cane_attack = False
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
 
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_LEFT:
-                    move_left_long = True
+                    move_left = True
                 if event.key == pygame.K_RIGHT:
-                    move_right_long = True
-                # if event.key == pygame.K_z:
-                #     jump_long = True
+                    move_right = True
 
             if event.type == pygame.KEYUP:
                 if event.key == pygame.K_LEFT:
-                    move_left_long = False
+                    move_left = False
                 if event.key == pygame.K_RIGHT:
-                    move_right_long = False
-                # if event.type == pygame.K_z:
-                #     jump_long = False
+                    move_right = False
 
             keys = pygame.key.get_pressed()
-            if keys[pygame.K_LEFT]:
-                move_left = True
-            if keys[pygame.K_RIGHT]:
-                move_right = True
             if keys[pygame.K_z]:
                 jump = True
+            if keys[pygame.K_x]:
+                cane_attack = True
 
-        if move_right_long:
+        if move_right:
             player_group.update("right")
-        if move_left_long:
+        if move_left:
             player_group.update("left")
         if jump:
             player_group.update("jump")
+        if cane_attack:
+            player_group.update("cane_attack")
 
         camera.update(player)
         for sprite in all_sprites:
@@ -473,11 +482,11 @@ if __name__ == '__main__':
         lives_and_score()
 
         player_group.update()
-        # enemy_group.update()
+        enemy_group.update()
 
         all_sprites.draw(screen)
         player_group.draw(screen)
-        # enemy_group.draw(screen)
+        enemy_group.draw(screen)
         pygame.display.flip()
         clock.tick(FPS)
     pygame.quit()

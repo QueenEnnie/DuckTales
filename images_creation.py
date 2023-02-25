@@ -1,14 +1,22 @@
-import pygame
 from PIL import Image
 
 
 def get_scrooge_standing_images():
     image = Image.open("data/scrooge_sheet.png")
-    left = image.crop((0, 0, 26, 32))
-    right = image.crop((25, 0, 51, 32))
+    left = image.crop((1, 2, 25, 31))
+    right = image.crop((26, 2, 50, 31))
     left.save("data/left.png")
     right.save("data/right.png")
     return {"left": "left.png", "right": "right.png"}
+
+
+def get_scrooge_with_cane_images():
+    image = Image.open("data/scrooge_sheet.png")
+    left = image.crop((1, 51, 25, 79))
+    right = image.crop((51, 51, 75, 79))
+    left.save("data/left_cane.png")
+    right.save("data/right_cane.png")
+    return {"left": "left_cane.png", "right": "right_cane.png"}
 
 
 def get_scrooge_walking_images():
@@ -94,6 +102,7 @@ def lives():
 
 
 get_amazon_landscapes_images()
+get_scrooge_with_cane_images()
 get_scrooge_jumping_images()
 get_scrooge_walking_images()
 get_gorilla_images()
