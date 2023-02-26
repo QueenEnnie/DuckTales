@@ -237,11 +237,10 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
 class GorillaEnemy(pygame.sprite.Sprite):
     def __init__(self, position_x, position_y):
         super().__init__(enemy_group, all_sprites)
-        super().__init__(enemy_group)
-
         self.delta_walk = -20
         self.count_loop = 0
         self.count_movement = 0
+        self.direction = "left"
 
         self.walking_image = get_gorilla_images()["walking"]
         self.defeated_image = get_gorilla_images()["defeated"]
@@ -249,25 +248,51 @@ class GorillaEnemy(pygame.sprite.Sprite):
         self.position_x = position_x * TILE_SIZE
         self.position_y = (position_y + 2) * TILE_SIZE
 
-        self.image = load_image(self.walking_image[0], -1)
+        self.image = load_image(self.walking_image[self.direction][0], -1)
         self.image = pygame.transform.scale(self.image, (2 * TILE_SIZE, 2 * TILE_SIZE))
         self.rect = self.image.get_rect().move(self.position_x, self.position_y)
+
+        self.set_direction()
+        self.change_image(self.walking_image[self.direction][0])
 
     def change_image(self, image_name):
         self.image = load_image(image_name, -1)
         self.image = pygame.transform.scale(self.image, (100, 100))
 
-    def update(self, move_event=None):
-        if self.count_loop % 8 == 0:
+    def moving(self):
+        if self.count_loop % 5 == 0:
             current_image = self.count_movement % len(self.walking_image)
-            self.change_image(self.walking_image[current_image])
+            self.change_image(self.walking_image[self.direction][current_image])
             self.count_movement += 1
         if self.count_movement == 2:
             self.rect = self.rect.move(self.delta_walk, 0)
             self.count_movement = 0
         self.count_loop += 1
 
+    def stump_collision(self):
+        self.rect = self.rect.move(self.delta_walk, 0)
+        collision = pygame.sprite.spritecollideany(self, stump_group)
+        self.rect = self.rect.move(-self.delta_walk, 0)
+        if collision:
+            if collision.rect.x < self.rect.x and self.direction == "left":
+                self.direction = "right"
+            if collision.rect.x > self.rect.x and self.direction == "right":
+                self.direction = "left"
+            self.delta_walk = -self.delta_walk
 
+    def set_direction(self):
+        if player.rect.x < self.rect.x:
+            self.direction = "left"
+        else:
+            self.direction = "right"
+
+    def update(self, move_event=None):
+        if self.direction == "left":
+            self.delta_walk = -20
+        else:
+            self.delta_walk = 20
+        self.stump_collision()
+        self.moving()
 
 
 class Tile(pygame.sprite.Sprite):

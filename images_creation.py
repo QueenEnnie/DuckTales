@@ -1,3 +1,4 @@
+import PIL.Image
 from PIL import Image
 
 
@@ -23,8 +24,6 @@ def get_scrooge_walking_images():
     image = Image.open("data/scrooge_sheet.png")
     image.crop((50, 2, 75, 31)).save("data/walking_left_1.png")
     image.crop((0, 2, 26, 31)).save("data/walking_left_2.png")
-    # image.crop((75, 0, 97, 32)).save("data/walking_left_2.png")
-    # image.crop((96, 0, 121, 32)).save("data/walking_left_3.png")
     image.crop((120, 2, 145, 31)).save("data/walking_right_1.png")
     image.crop((25, 2, 51, 31)).save("data/walking_right_2.png")
     return {"left": ["walking_left_1.png", "walking_left_2.png"],
@@ -66,32 +65,27 @@ def get_sky_colour():
     image = Image.open("data/DuckTalesMap1.jpg")
     pixels = image.load()
     return pixels[0, 0]
-    # width, length = image.size
-    # print(width, length)
-    # summa_r, summa_b, summa_g = 0, 0, 0
-    # for i in range(width):
-    #     for j in range(length):
-    #         print(pixels[i, j])
-    #         r, g, b = pixels[i, j]
-    #         summa_r += r
-    #         summa_b += b
-    #         summa_g += g
-    #         print(r, g, b)
-    # pixels = image.load()
 
-
-# def get_sky_colour():
-#     image = pygame.image.load("data/DuckTalesMap1.png").copy()
-#     colour = image.get_at((0, 0))
-#     return colour[0], colour[1], colour[3]
 
 def get_gorilla_images():
     image = Image.open("data/enemies_sheet.png")
-    image.crop((6, 3, 34, 34)).save("data/gorilla_walking_1.png")
-    image.crop((35, 3, 59, 34)).save("data/gorilla_walking_2.png")
-    image.crop((63, 3, 87, 34)).save("data/gorilla_defeated.png")
-    return {"walking": ["gorilla_walking_2.png", "gorilla_walking_1.png"],
-            "defeated": "gorilla_defeated.png"}
+    image.crop((6, 3, 34, 34)).save("data/gorilla_walking_left_1.png")
+    image.crop((35, 3, 59, 34)).save("data/gorilla_walking_left_2.png")
+    image.crop((63, 3, 87, 34)).save("data/gorilla_defeated_left.png")
+
+    image = Image.open("data/gorilla_walking_left_1.png")
+    image.transpose(PIL.Image.FLIP_LEFT_RIGHT).save("data/gorilla_walking_right_1.png")
+
+    image = Image.open("data/gorilla_walking_left_2.png")
+    image.transpose(PIL.Image.FLIP_LEFT_RIGHT).save("data/gorilla_walking_right_2.png")
+
+    image = Image.open("data/gorilla_defeated_left.png")
+    image.transpose(PIL.Image.FLIP_LEFT_RIGHT).save("data/gorilla_defeated_right.png")
+
+    return {"walking": {"left": ["gorilla_walking_left_2.png", "gorilla_walking_left_1.png"],
+                        "right": ["gorilla_walking_right_2.png", "gorilla_walking_right_1.png"]},
+            "defeated": {"left": "gorilla_defeated_left.png",
+                         "right": "gorilla_defeated_right.png"}}
 
 
 def lives():
