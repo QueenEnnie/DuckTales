@@ -95,6 +95,14 @@ def get_gorilla_images():
                          "right": "gorilla_defeated_right.png"}}
 
 
+def get_flower_images():
+    image = Image.open("data/enemies_sheet.png")
+    image.crop((6, 80, 31, 113)).save("data/flower_1.png")
+    image.crop((33, 78, 57, 114)).save("data/flower_2.png")
+    image.crop((62, 75, 83, 115)).save("data/flower_3.png")
+    return ["flower_1.png", "flower_2.png", "flower_3.png"]
+
+
 def lives():
     image = Image.open("data/lives.png")
     image.crop((760, 255, 830, 320)).save("data/full_health.png")
@@ -109,6 +117,7 @@ get_scrooge_jumping_images()
 get_scrooge_walking_images()
 get_gorilla_images()
 lives()
+get_flower_images()
 
 
 
