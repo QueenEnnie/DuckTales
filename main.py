@@ -77,6 +77,18 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
                 if collision.rect.x > self.rect.x and self.direction == "right":
                     self.delta_walk = collision.rect.x - (self.rect.x + self.rect.w)
 
+    def rock_collision(self):
+        if not pygame.sprite.spritecollideany(self, rock_group):
+            self.rect = self.rect.move(self.delta_walk, 0)
+            collision = find_collision(self, rock_group)
+            self.rect = self.rect.move(-self.delta_walk, 0)
+            if collision:
+                if collision.rect.x < self.rect.x and self.direction == "left":
+                    self.delta_walk = collision.rect.x + collision.rect.w - self.rect.x
+                if collision.rect.x > self.rect.x and self.direction == "right":
+                    self.delta_walk = collision.rect.x - (self.rect.x + self.rect.w)
+                self.rect = self.rect.move(self.delta_walk, 0)
+
     def stump_collision_jump(self):
         if self.move_on_the_stump:
             return
@@ -194,7 +206,6 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
     def update(self, move_event=None):
         if move_event in ["left", "right"]:
             self.direction = move_event
-            # self.move_right_left = True
             if self.jump:
                 if move_event == "right":
                     self.delta_jump_x = 10
@@ -216,6 +227,7 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
             self.cane_attack = True
 
         self.stump_collision_walk()
+        self.rock_collision()
 
         if self.move_right_left:
             self.moving_forward_backward()
@@ -242,6 +254,9 @@ class GorillaEnemy(pygame.sprite.Sprite):
         self.count_movement = 0
         self.direction = "left"
 
+        self.move = True
+        self.stump_height = None
+        self.move_on_stump = False
         self.walking_image = get_gorilla_images()["walking"]
         self.defeated_image = get_gorilla_images()["defeated"]
 
@@ -271,14 +286,18 @@ class GorillaEnemy(pygame.sprite.Sprite):
 
     def stump_collision(self):
         self.rect = self.rect.move(self.delta_walk, 0)
-        collision = pygame.sprite.spritecollideany(self, stump_group)
+        collision = find_collision(self, stump_group)
         self.rect = self.rect.move(-self.delta_walk, 0)
-        if collision:
-            if collision.rect.x < self.rect.x and self.direction == "left":
-                self.direction = "right"
-            if collision.rect.x > self.rect.x and self.direction == "right":
-                self.direction = "left"
-            self.delta_walk = -self.delta_walk
+        if self.move_on_stump:
+            if not collision:
+                self.rect = self.rect.move(self.delta_walk, self.stump_height)
+                self.move_on_stump = False
+        else:
+            if collision:
+                self.stump_height = collision.rect.h
+                self.rect = self.rect.move(self.delta_walk, -self.stump_height)
+                self.move_on_stump = True
+                self.delta_walk = -self.delta_walk
 
     def set_direction(self):
         if player.rect.x < self.rect.x:
@@ -286,13 +305,27 @@ class GorillaEnemy(pygame.sprite.Sprite):
         else:
             self.direction = "right"
 
+    def check_rock_collision(self):
+        self.rect = self.rect.move(self.delta_walk, 0)
+        collision = find_collision(self, rock_group)
+        self.rect = self.rect.move(-self.delta_walk, 0)
+        if collision:
+            if collision.rect.x < self.rect.x and self.direction == "left":
+                self.delta_walk = collision.rect.x + collision.rect.w - self.rect.x + 1000
+            if collision.rect.x > self.rect.x and self.direction == "right":
+                self.delta_walk = collision.rect.x - (self.rect.x + self.rect.w) + 1000
+            self.rect = self.rect.move(self.delta_walk, 0)
+            self.move = False
+
     def update(self, move_event=None):
-        if self.direction == "left":
-            self.delta_walk = -20
-        else:
-            self.delta_walk = 20
-        self.stump_collision()
-        self.moving()
+        if self.move:
+            if self.direction == "left":
+                self.delta_walk = -20
+            else:
+                self.delta_walk = 20
+            self.stump_collision()
+            self.check_rock_collision()
+            self.moving()
 
 
 class Tile(pygame.sprite.Sprite):
@@ -369,6 +402,9 @@ def level_generation():
             elif level_map[y][x] == "M":
                 grass = Tile(level_map[y][x], x, y + 2)
                 grass_group.add(grass)
+            elif level_map[y][x] == "R":
+                rock = Tile(level_map[y][x], x, y + 2)
+                rock_group.add(rock)
             elif level_map[y][x] == "A":
                 # pass
                 enemy = GorillaEnemy(x, y)
@@ -456,6 +492,7 @@ if __name__ == '__main__':
     # gorilla group creation???
     stump_group = pygame.sprite.Group()
     grass_group = pygame.sprite.Group()
+    rock_group = pygame.sprite.Group()
 
     player = level_generation()
 
