@@ -37,6 +37,13 @@ def get_scrooge_jumping_images():
     return {"right": "jumping_right.png", "left": "jumping_left.png"}
 
 
+def get_scrooge_dead_images():
+    image = Image.open("data/scrooge_sheet.png")
+    image.crop((240, 1, 264, 35)).save("data/dead_left.png")
+    image.crop((265, 1, 289, 35)).save("data/dead_right.png")
+    return {"right": "dead_right.png", "left": "dead_left.png"}
+
+
 def get_amazon_landscapes_images():
     image = Image.open("data/amazon_lanscape_sheet.png")
     image.crop((0, 16, 15, 32)).save("data/grass.png")
@@ -96,6 +103,7 @@ def lives():
 
 
 get_amazon_landscapes_images()
+get_scrooge_dead_images()
 get_scrooge_with_cane_images()
 get_scrooge_jumping_images()
 get_scrooge_walking_images()

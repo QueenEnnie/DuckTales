@@ -32,8 +32,12 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
         self.move_right_left = False
         self.jump = False
         self.reach_higher_point = False
+        self.reach_higher_point_in_pain = False
         self.move_on_the_stump = False
         self.return_from_stump_on_the_ground = False
+        self.current_injury = False
+        self.start_collision = False
+        self.falling = False
         self.direction = "left"
 
         self.delta_walk = 0
@@ -43,6 +47,7 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
         self.count_iteration_return_ground = 0
         self.count_iteration_left_right = 0
         self.count_iteration_jump = 0
+        self.count_pain = 0
         self.count_rise = 0
         self.count_loop = 0
 
@@ -54,6 +59,7 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
         self.walking_image = get_scrooge_walking_images()
         self.jumping_image = get_scrooge_jumping_images()
         self.images_with_cane = get_scrooge_with_cane_images()
+        self.dead_images = get_scrooge_dead_images()
 
         self.image = load_image(self.standing_image["left"], -1)
         self.image = pygame.transform.scale(self.image, (2 * TILE_SIZE, 2 * TILE_SIZE))
@@ -112,6 +118,7 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
                     self.delta_jump_y = collision.rect.y - self.rect.y - self.rect.h
                     self.rect = self.rect.move(0, self.delta_jump_y)
                     self.jump = False
+                    self.cane_attack = False
                     self.move_right_left = False
                     self.move_on_the_stump = True
                     self.reach_higher_point = False
@@ -133,6 +140,7 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
                     self.delta_jump_y = collision.rect.y - self.rect.y - self.rect.h
                     self.rect = self.rect.move(0, self.delta_jump_y)
                     self.jump = False
+                    self.cane_attack = False
                     self.move_right_left = False
                     self.move_on_the_stump = True
                     self.reach_higher_point = False
@@ -191,6 +199,7 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
                     self.rect = self.rect.move(self.delta_jump_x, self.delta_jump_y)
                     self.reach_higher_point = False
                     self.jump = False
+                    self.cane_attack = False
                     self.delta_jump_x = 0
                     self.change_image(self.standing_image[self.direction])
                     self.count_rise = 0
@@ -203,7 +212,45 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
         else:
             self.jump = False
 
+    def injury(self):
+        if not self.current_injury:
+            if not self.start_collision:
+                if self.count_lives > 0:
+                    self.count_lives -= 1
+                else:
+                    self.falling = True
+                    self.current_injury = False
+            self.current_injury = True
+            self.change_image(self.dead_images[self.direction])
+            self.start_collision = True
+        if self.count_pain < 10 and not self.reach_higher_point_in_pain:
+            self.rect = self.rect.move(0, -5)
+            self.count_pain += 1
+        else:
+            if self.count_pain > 0:
+                self.rect = self.rect.move(0, 5)
+                self.count_pain -= 1
+                self.reach_higher_point_in_pain = True
+            else:
+                image_name = self.standing_image[self.direction]
+                if self.jump:
+                    image_name = self.jumping_image[self.direction]
+                self.change_image(image_name)
+                self.current_injury = False
+                self.reach_higher_point_in_pain = False
+
+    def death(self):
+        self.rect = self.rect.move(0, 10)
+
     def update(self, move_event=None):
+        if self.current_injury:
+            self.injury()
+            return
+
+        if self.falling:
+            self.death()
+            return
+
         if move_event in ["left", "right"]:
             self.direction = move_event
             if self.jump:
@@ -224,7 +271,10 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
             self.jump = True
 
         if move_event == "cane_attack":
-            self.cane_attack = True
+            if self.jump:
+                self.cane_attack = True
+            else:
+                self.cane_attack = False
 
         self.stump_collision_walk()
         self.rock_collision()
@@ -252,9 +302,11 @@ class GorillaEnemy(pygame.sprite.Sprite):
         self.delta_walk = -20
         self.count_loop = 0
         self.count_movement = 0
+        self.count_falling = 0
         self.direction = "left"
 
         self.move = True
+        self.falling = False
         self.stump_height = None
         self.move_on_stump = False
         self.walking_image = get_gorilla_images()["walking"]
@@ -315,7 +367,24 @@ class GorillaEnemy(pygame.sprite.Sprite):
             if collision.rect.x > self.rect.x and self.direction == "right":
                 self.delta_walk = collision.rect.x - (self.rect.x + self.rect.w) + 1000
             self.rect = self.rect.move(self.delta_walk, 0)
-            self.move = False
+
+    def collision_with_hero(self):
+        if pygame.sprite.collide_mask(self, player):
+            if player.cane_attack:
+                self.change_image(self.defeated_image[self.direction])
+                self.move = False
+                self.falling = True
+            else:
+                player.injury()
+        else:
+            player.start_collision = False
+
+    def fall(self):
+        if self.count_falling % 2 == 0:
+            self.rect = self.rect.move(0, 10)
+        self.count_falling += 1
+        if self.rect.y > 1000:
+            self.falling = False
 
     def update(self, move_event=None):
         if self.move:
@@ -323,9 +392,12 @@ class GorillaEnemy(pygame.sprite.Sprite):
                 self.delta_walk = -20
             else:
                 self.delta_walk = 20
+            self.collision_with_hero()
             self.stump_collision()
             self.check_rock_collision()
             self.moving()
+        if self.falling:
+            self.fall()
 
 
 class Tile(pygame.sprite.Sprite):
