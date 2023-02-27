@@ -324,7 +324,7 @@ class GorillaEnemy(pygame.sprite.Sprite):
 
     def change_image(self, image_name):
         self.image = load_image(image_name, -1)
-        self.image = pygame.transform.scale(self.image, (100, 100))
+        self.image = pygame.transform.scale(self.image, (2 * TILE_SIZE, 2 * TILE_SIZE))
 
     def moving(self):
         if self.count_loop % 5 == 0:
@@ -400,6 +400,46 @@ class GorillaEnemy(pygame.sprite.Sprite):
             self.fall()
 
 
+class FlowerEnemy(pygame.sprite.Sprite):
+    def __init__(self, position_x, position_y):
+        super().__init__(enemy_group, all_sprites)
+        self.all_images = get_flower_images()
+
+        self.count_of_moving = 0
+        self.move = True
+
+        self.position_x = position_x * TILE_SIZE
+        self.position_y = (position_y + 0.5) * TILE_SIZE
+
+        self.image = load_image(self.all_images[0], -1)
+        self.image = pygame.transform.scale(self.image, (1.5 * TILE_SIZE, 1.5 * TILE_SIZE))
+        self.rect = self.image.get_rect().move(self.position_x, self.position_y)
+
+    def change_image(self, image_name):
+        self.image = load_image(image_name, -1)
+        self.image = pygame.transform.scale(self.image, (1.5 * TILE_SIZE, 1.5 * TILE_SIZE))
+
+    def moving(self):
+        if self.count_of_moving % 5 == 0:
+            current_image = self.count_of_moving % len(self.all_images)
+            self.change_image(self.all_images[current_image])
+        self.count_of_moving += 1
+
+    def collision_with_hero(self):
+        if pygame.sprite.collide_mask(self, player):
+            if not player.start_collision:
+                player.injury()
+                self.move = False
+                self.change_image(self.all_images[0])
+        else:
+            player.start_collision = False
+
+    def update(self, move_event=None):
+        if self.move:
+            self.moving()
+            self.collision_with_hero()
+
+
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tiles_group, all_sprites)
@@ -463,9 +503,6 @@ def load_map(filename):
 def level_generation():
     global player
     level_map = load_map("first_level_map.txt")
-    new_player = None
-    x_size = len(level_map[0])
-    y_size = len(level_map)
     for y in range(len(level_map)):
         for x in range(len(level_map[y])):
             if level_map[y][x] == "P":
@@ -478,8 +515,10 @@ def level_generation():
                 rock = Tile(level_map[y][x], x, y + 2)
                 rock_group.add(rock)
             elif level_map[y][x] == "A":
-                # pass
                 enemy = GorillaEnemy(x, y)
+                enemy_group.add(enemy)
+            elif level_map[y][x] == "F":
+                enemy = FlowerEnemy(x, y + 2)
                 enemy_group.add(enemy)
             else:
                 if level_map[y][x] != ".":
