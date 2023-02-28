@@ -182,7 +182,7 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
         self.delta_jump_y = 20
         if self.count_iteration_jump % 4 == 0:
             if not self.reach_higher_point:
-                if self.count_rise < 10:
+                if self.count_rise < 9:
                     self.change_image(self.jumping_image[self.direction])
                     self.rect = self.rect.move(self.delta_jump_x, -self.delta_jump_y)
                     self.count_rise += 1
@@ -502,7 +502,8 @@ def load_map(filename):
 
 def level_generation():
     global player
-    level_map = load_map("first_level_map.txt")
+    # level_map = load_map("first_level_map.txt")
+    level_map = load_map("second_level_map.txt")
     for y in range(len(level_map)):
         for x in range(len(level_map[y])):
             if level_map[y][x] == "P":
@@ -511,6 +512,10 @@ def level_generation():
             elif level_map[y][x] == "M":
                 grass = Tile(level_map[y][x], x, y + 2)
                 grass_group.add(grass)
+            elif level_map[y][x] == "E":
+                earth = Tile(level_map[y][x], x, y + 2)
+                grass_group.add(earth)
+                rock_group.add(earth)
             elif level_map[y][x] == "R":
                 rock = Tile(level_map[y][x], x, y + 2)
                 rock_group.add(rock)
@@ -592,7 +597,8 @@ if __name__ == '__main__':
     start_screen()
 
     sky_colour = get_sky_colour()
-    screen.fill(sky_colour)
+    # screen.fill(sky_colour)
+    screen.fill("black")
 
     camera = Camera()
 
@@ -651,7 +657,8 @@ if __name__ == '__main__':
         for sprite in all_sprites:
             camera.apply(sprite)
 
-        screen.fill(sky_colour)
+        # screen.fill(sky_colour)
+        screen.fill("black")
         lives_and_score()
 
         player_group.update()
