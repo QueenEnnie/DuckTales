@@ -60,6 +60,8 @@ def get_amazon_landscapes_images():
     image.crop((109, 496, 141, 528)).save("data/bricks.png")
     image.crop((896, 639, 928, 672)).save("data/idol_statue.png")
     image.crop((336, 896, 352, 913)).save("data/cursor.png")
+    image.crop((708, 805, 716, 813)).save("data/small_diamond.png")
+    image.crop((2000, 1086, 2016, 1102)).save("data/big_diamond.png")
 
     amazon_images = {"G": "grass.png",
                      "T": "trunk.png",
@@ -72,7 +74,9 @@ def get_amazon_landscapes_images():
                      "J": "rock_with_leaves.png",
                      "B": "bricks.png",
                      "I": "idol_statue.png",
-                     "C": "cursor.png"}
+                     "C": "cursor.png",
+                     "d": "small_diamond.png",
+                     "D": "big_diamond.png"}
     return amazon_images
 
 
