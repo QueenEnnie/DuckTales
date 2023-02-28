@@ -54,8 +54,12 @@ def get_amazon_landscapes_images():
     image.crop((1019, 1360, 1061, 1392)).save("data/stump.png")
     image.crop((9, 1408, 26, 1424)).save("data/earth.png")
     image.crop((0, 1200, 32, 1232)).save("data/leaves.png")
-    image.crop((720, 1376, 736, 1392)).save("data/rock.png")
     image.crop((1312, 1392, 1328, 1424)).save("data/thorn.png")
+    image.crop((0, 688, 32, 721)).save("data/rock.png")
+    image.crop((0, 512, 32, 544)).save("data/rock_with_leaves.png")
+    image.crop((109, 496, 141, 528)).save("data/bricks.png")
+    image.crop((896, 639, 928, 672)).save("data/idol_statue.png")
+    image.crop((336, 896, 352, 913)).save("data/cursor.png")
 
     amazon_images = {"G": "grass.png",
                      "T": "trunk.png",
@@ -64,7 +68,11 @@ def get_amazon_landscapes_images():
                      "E": "earth.png",
                      "L": "leaves.png",
                      "R": "rock.png",
-                     "H": "thorn.png"}
+                     "H": "thorn.png",
+                     "J": "rock_with_leaves.png",
+                     "B": "bricks.png",
+                     "I": "idol_statue.png",
+                     "C": "cursor.png"}
     return amazon_images
 
 
@@ -108,6 +116,12 @@ def lives():
     image.crop((760, 255, 830, 320)).save("data/full_health.png")
     image.crop((845, 255, 915, 320)).save("data/lost_health.png")
     return {"lost": "lost_health.png", "full": "full_health.png"}
+
+
+def get_levels_information():
+    return {1: {"colour": get_sky_colour(), "map": "first_level_map.txt"},
+            2: {"colour": "black", "map": "second_level_map.txt"},
+            3: {"colour": "black", "map": "third_level_map.txt"}}
 
 
 get_amazon_landscapes_images()

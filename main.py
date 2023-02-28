@@ -7,6 +7,7 @@ WIDTH, HEIGHT = 1000, 700
 TILES_IMAGES = get_amazon_landscapes_images()
 TILE_SIZE = 50
 FPS = 60
+LEVELS_INFO = get_levels_information()
 
 
 class Camera:
@@ -448,6 +449,10 @@ class Tile(pygame.sprite.Sprite):
             self.image = pygame.transform.scale(self.image, (3 * TILE_SIZE, 2 * TILE_SIZE))
             pos_y -= 1
             self.add(stump_group)
+        elif tile_type == "I":
+            self.image = pygame.transform.scale(self.image, (2 * TILE_SIZE, 2 * TILE_SIZE))
+            pos_y -= 1
+            self.add(stump_group)
         elif tile_type == "H":
             self.image = pygame.transform.scale(self.image, (1 * TILE_SIZE, 2 * TILE_SIZE))
             pos_y -= 1
@@ -502,13 +507,13 @@ def load_map(filename):
 
 def level_generation():
     global player
-    # level_map = load_map("first_level_map.txt")
-    level_map = load_map("second_level_map.txt")
+    level_map = load_map(LEVELS_INFO[current_level]["map"])
     for y in range(len(level_map)):
         for x in range(len(level_map[y])):
             if level_map[y][x] == "P":
                 player = ScroogeMcDuck(x, y + 2)
                 player_group.add(player)
+                Tile(level_map[y][x + 1], x, y + 2)
             elif level_map[y][x] == "M":
                 grass = Tile(level_map[y][x], x, y + 2)
                 grass_group.add(grass)
@@ -516,7 +521,7 @@ def level_generation():
                 earth = Tile(level_map[y][x], x, y + 2)
                 grass_group.add(earth)
                 rock_group.add(earth)
-            elif level_map[y][x] == "R":
+            elif level_map[y][x] == "R" or level_map[y][x] == "J":
                 rock = Tile(level_map[y][x], x, y + 2)
                 rock_group.add(rock)
             elif level_map[y][x] == "A":
@@ -596,9 +601,10 @@ if __name__ == '__main__':
 
     start_screen()
 
-    sky_colour = get_sky_colour()
-    # screen.fill(sky_colour)
-    screen.fill("black")
+    current_level = 3
+
+    sky_colour = LEVELS_INFO[current_level]["colour"]
+    screen.fill(sky_colour)
 
     camera = Camera()
 
@@ -657,8 +663,7 @@ if __name__ == '__main__':
         for sprite in all_sprites:
             camera.apply(sprite)
 
-        # screen.fill(sky_colour)
-        screen.fill("black")
+        screen.fill(sky_colour)
         lives_and_score()
 
         player_group.update()
