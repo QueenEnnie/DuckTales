@@ -212,6 +212,12 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
                     self.count_rise = 0
         self.count_iteration_jump += 1
 
+    def take_diamonds(self):
+        collision = pygame.sprite.spritecollideany(self, diamond_group)
+        if collision:
+            self.money += collision.value
+            collision.kill()
+
     def cane_attacking(self):
         if self.jump:
             image_name = self.images_with_cane[self.direction]
@@ -283,7 +289,7 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
                 self.cane_attack = True
             else:
                 self.cane_attack = False
-
+        self.take_diamonds()
         self.stump_collision_walk()
         self.rock_collision()
 
@@ -391,8 +397,11 @@ class GorillaEnemy(pygame.sprite.Sprite):
         if self.count_falling % 2 == 0:
             self.rect = self.rect.move(0, 10)
         self.count_falling += 1
-        if self.rect.y > 1000:
-            self.rect = self.rect.move(self.position_x, self.position_y)
+        if self.rect.y > 800:
+            self.rect = self.rect.move(1000, self.position_y - self.rect.y)
+            self.set_direction()
+            self.falling = False
+            self.move = True
 
     def update(self, move_event=None):
         if self.move:
@@ -417,15 +426,15 @@ class FlowerEnemy(pygame.sprite.Sprite):
         self.move = True
 
         self.position_x = position_x * TILE_SIZE
-        self.position_y = (position_y + 0.5) * TILE_SIZE
+        self.position_y = (position_y + 0.8) * TILE_SIZE
 
         self.image = load_image(self.all_images[0], -1)
-        self.image = pygame.transform.scale(self.image, (1.5 * TILE_SIZE, 1.5 * TILE_SIZE))
+        self.image = pygame.transform.scale(self.image, (1.2 * TILE_SIZE, 1.2 * TILE_SIZE))
         self.rect = self.image.get_rect().move(self.position_x, self.position_y)
 
     def change_image(self, image_name):
         self.image = load_image(image_name, -1)
-        self.image = pygame.transform.scale(self.image, (1.5 * TILE_SIZE, 1.5 * TILE_SIZE))
+        self.image = pygame.transform.scale(self.image, (1.2 * TILE_SIZE, 1.2 * TILE_SIZE))
 
     def moving(self):
         if self.count_of_moving % 5 == 0:
@@ -465,6 +474,21 @@ class Tile(pygame.sprite.Sprite):
             pos_y -= 1
         else:
             self.image = pygame.transform.scale(self.image, (TILE_SIZE, TILE_SIZE))
+        self.rect = self.image.get_rect().move(TILE_SIZE * pos_x, TILE_SIZE * pos_y)
+
+
+class Diamond(pygame.sprite.Sprite):
+    def __init__(self, tile_type, pos_x, pos_y):
+        super().__init__(diamond_group, all_sprites)
+        self.image = load_image(TILES_IMAGES[tile_type], -1)
+        if tile_type == "D":
+            self.value = 5000
+            self.image = pygame.transform.scale(self.image, (1 * TILE_SIZE, 1 * TILE_SIZE))
+        elif tile_type == "d":
+            self.value = 1000
+            self.image = pygame.transform.scale(self.image, (0.5 * TILE_SIZE, 0.5 * TILE_SIZE))
+            pos_y += 0.5
+            pos_x += 0.5
         self.rect = self.image.get_rect().move(TILE_SIZE * pos_x, TILE_SIZE * pos_y)
 
 
@@ -540,6 +564,10 @@ def level_generation():
             elif level_map[y][x] == "F":
                 enemy = FlowerEnemy(x, y + 2)
                 enemy_group.add(enemy)
+            elif level_map[y][x] == "D" or level_map[y][x] == "d":
+                if level_map[y][x + 1] != ".":
+                    Tile(level_map[y][x + 1], x, y + 2)
+                Diamond(level_map[y][x], x, y + 2)
             else:
                 if level_map[y][x] != ".":
                     Tile(level_map[y][x], x, y + 2)
@@ -564,7 +592,7 @@ def start_screen():
 def levels():
     global count_lives, money
     count_lives = 3
-    money = 2000
+    money = 0
     for i in range(3):
         global current_level
         current_level = i + 1
@@ -695,6 +723,7 @@ if __name__ == '__main__':
     grass_group = pygame.sprite.Group()
     rock_group = pygame.sprite.Group()
     cursor_group = pygame.sprite.Group()
+    diamond_group = pygame.sprite.Group()
 
     start_screen()
     levels()
