@@ -37,7 +37,6 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
         self.move_on_the_stump = False
         self.return_from_stump_on_the_ground = False
         self.current_injury = False
-        self.start_collision = False
         self.falling = False
         self.direction = "left"
 
@@ -179,6 +178,12 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
             self.count_iteration_left_right = 0
         self.count_loop += 1
 
+    def cursor_collision(self):
+        global current_level
+        if pygame.sprite.spritecollideany(self, cursor_group):
+            current_level += 1
+            return True
+
     def jumping(self):
         self.delta_jump_y = 20
         if self.count_iteration_jump % 4 == 0:
@@ -215,16 +220,13 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
 
     def injury(self):
         if not self.current_injury:
-            if not self.start_collision:
-                if self.count_lives > 0:
-                    self.count_lives -= 1
-                    print(player.start_collision)
-                else:
-                    self.falling = True
-                    self.current_injury = False
+            if self.count_lives > 0:
+                self.count_lives -= 1
+            else:
+                self.falling = True
+                self.current_injury = False
             self.current_injury = True
             self.change_image(self.dead_images[self.direction])
-            self.start_collision = True
         if self.count_pain < 10 and not self.reach_higher_point_in_pain:
             self.rect = self.rect.move(0, -5)
             self.count_pain += 1
@@ -245,6 +247,9 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
         self.rect = self.rect.move(0, 10)
 
     def update(self, move_event=None):
+        if self.cursor_collision():
+            return
+
         if self.current_injury:
             self.injury()
             return
@@ -311,7 +316,6 @@ class GorillaEnemy(pygame.sprite.Sprite):
         self.falling = False
         self.stump_height = None
         self.move_on_stump = False
-        self.hero_collision_x = None
         self.walking_image = get_gorilla_images()["walking"]
         self.defeated_image = get_gorilla_images()["defeated"]
 
@@ -372,28 +376,15 @@ class GorillaEnemy(pygame.sprite.Sprite):
             self.rect = self.rect.move(self.delta_walk, 0)
 
     def collision_with_hero(self):
-        if not player.start_collision:
-            if pygame.sprite.collide_mask(self, player):
-                if player.cane_attack:
-                    self.change_image(self.defeated_image[self.direction])
-                    self.move = False
-                    self.falling = True
-                else:
-                    if not player.start_collision:
-                        self.hero_collision_x = [player.rect.x, player.rect.x + player.rect.w]
-                        player.injury()
-                        player.start_collision = True
-
-        else:
-            if self.hero_collision_x[0] <= self.rect.x <= self.hero_collision_x[1] or \
-                    self.hero_collision_x[0] <= self.rect.x + self.rect.w <= self.hero_collision_x[1]:
-                print(1)
+        if pygame.sprite.collide_mask(self, player):
+            if player.cane_attack:
+                self.change_image(self.defeated_image[self.direction])
+                self.move = False
+                self.falling = True
             else:
-                player.start_collision = False
-                # player.injury()
-        #
-        # else:
-        #     player.start_collision = False
+                player.injury()
+                player.start_collision = True
+                self.delta_walk = self.delta_walk * 6
 
     def fall(self):
         if self.count_falling % 2 == 0:
@@ -537,6 +528,9 @@ def level_generation():
                 earth = Tile(level_map[y][x], x, y + 2)
                 grass_group.add(earth)
                 rock_group.add(earth)
+            elif level_map[y][x] == "C":
+                cursor = Tile(level_map[y][x], x, y + 2)
+                cursor_group.add(cursor)
             elif level_map[y][x] == "R" or level_map[y][x] == "J":
                 rock = Tile(level_map[y][x], x, y + 2)
                 rock_group.add(rock)
@@ -632,6 +626,7 @@ if __name__ == '__main__':
     stump_group = pygame.sprite.Group()
     grass_group = pygame.sprite.Group()
     rock_group = pygame.sprite.Group()
+    cursor_group = pygame.sprite.Group()
 
     player = level_generation()
 
