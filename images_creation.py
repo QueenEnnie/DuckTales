@@ -126,16 +126,3 @@ def get_levels_information():
     return {1: {"colour": get_sky_colour(), "map": "first_level_map.txt"},
             3: {"colour": "black", "map": "third_level_map.txt"},
             2: {"colour": "black", "map": "second_level_map.txt"}}
-
-
-get_amazon_landscapes_images()
-get_scrooge_dead_images()
-get_scrooge_with_cane_images()
-get_scrooge_jumping_images()
-get_scrooge_walking_images()
-get_gorilla_images()
-lives()
-get_flower_images()
-
-
-

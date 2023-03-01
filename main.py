@@ -426,15 +426,15 @@ class FlowerEnemy(pygame.sprite.Sprite):
         self.move = True
 
         self.position_x = position_x * TILE_SIZE
-        self.position_y = (position_y + 0.8) * TILE_SIZE
+        self.position_y = (position_y + 1) * TILE_SIZE
 
         self.image = load_image(self.all_images[0], -1)
-        self.image = pygame.transform.scale(self.image, (1.2 * TILE_SIZE, 1.2 * TILE_SIZE))
+        self.image = pygame.transform.scale(self.image, (1 * TILE_SIZE, 1 * TILE_SIZE))
         self.rect = self.image.get_rect().move(self.position_x, self.position_y)
 
     def change_image(self, image_name):
         self.image = load_image(image_name, -1)
-        self.image = pygame.transform.scale(self.image, (1.2 * TILE_SIZE, 1.2 * TILE_SIZE))
+        self.image = pygame.transform.scale(self.image, (1 * TILE_SIZE, 1 * TILE_SIZE))
 
     def moving(self):
         if self.count_of_moving % 5 == 0:
@@ -543,7 +543,7 @@ def level_generation():
             if level_map[y][x] == "P":
                 player = ScroogeMcDuck(x, y + 2, count_lives, money)
                 player_group.add(player)
-                if current_level == 2:
+                if level_map[y][x + 1] != ".":
                     Tile(level_map[y][x + 1], x, y + 2)
             elif level_map[y][x] == "M":
                 grass = Tile(level_map[y][x], x, y + 2)
@@ -561,9 +561,13 @@ def level_generation():
             elif level_map[y][x] == "A":
                 enemy = GorillaEnemy(x, y)
                 enemy_group.add(enemy)
+                if level_map[y][x + 1] != ".":
+                    Tile(level_map[y][x + 1], x, y + 2)
             elif level_map[y][x] == "F":
                 enemy = FlowerEnemy(x, y + 2)
                 enemy_group.add(enemy)
+                if level_map[y][x + 1] != ".":
+                    Tile(level_map[y][x + 1], x, y + 2)
             elif level_map[y][x] == "D" or level_map[y][x] == "d":
                 if level_map[y][x + 1] != ".":
                     Tile(level_map[y][x + 1], x, y + 2)
