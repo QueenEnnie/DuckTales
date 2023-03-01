@@ -218,6 +218,7 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
             if not self.start_collision:
                 if self.count_lives > 0:
                     self.count_lives -= 1
+                    print(player.start_collision)
                 else:
                     self.falling = True
                     self.current_injury = False
@@ -310,6 +311,7 @@ class GorillaEnemy(pygame.sprite.Sprite):
         self.falling = False
         self.stump_height = None
         self.move_on_stump = False
+        self.hero_collision_x = None
         self.walking_image = get_gorilla_images()["walking"]
         self.defeated_image = get_gorilla_images()["defeated"]
 
@@ -370,15 +372,28 @@ class GorillaEnemy(pygame.sprite.Sprite):
             self.rect = self.rect.move(self.delta_walk, 0)
 
     def collision_with_hero(self):
-        if pygame.sprite.collide_mask(self, player):
-            if player.cane_attack:
-                self.change_image(self.defeated_image[self.direction])
-                self.move = False
-                self.falling = True
-            else:
-                player.injury()
+        if not player.start_collision:
+            if pygame.sprite.collide_mask(self, player):
+                if player.cane_attack:
+                    self.change_image(self.defeated_image[self.direction])
+                    self.move = False
+                    self.falling = True
+                else:
+                    if not player.start_collision:
+                        self.hero_collision_x = [player.rect.x, player.rect.x + player.rect.w]
+                        player.injury()
+                        player.start_collision = True
+
         else:
-            player.start_collision = False
+            if self.hero_collision_x[0] <= self.rect.x <= self.hero_collision_x[1] or \
+                    self.hero_collision_x[0] <= self.rect.x + self.rect.w <= self.hero_collision_x[1]:
+                print(1)
+            else:
+                player.start_collision = False
+                # player.injury()
+        #
+        # else:
+        #     player.start_collision = False
 
     def fall(self):
         if self.count_falling % 2 == 0:
@@ -513,7 +528,8 @@ def level_generation():
             if level_map[y][x] == "P":
                 player = ScroogeMcDuck(x, y + 2)
                 player_group.add(player)
-                Tile(level_map[y][x + 1], x, y + 2)
+                if current_level == 3:
+                    Tile(level_map[y][x + 1], x, y + 2)
             elif level_map[y][x] == "M":
                 grass = Tile(level_map[y][x], x, y + 2)
                 grass_group.add(grass)
@@ -601,7 +617,7 @@ if __name__ == '__main__':
 
     start_screen()
 
-    current_level = 3
+    current_level = 1
 
     sky_colour = LEVELS_INFO[current_level]["colour"]
     screen.fill(sky_colour)
