@@ -24,10 +24,11 @@ class Camera:
 
 
 class ScroogeMcDuck(pygame.sprite.Sprite):
-    def __init__(self, position_x, position_y):
+    def __init__(self, position_x, position_y, player_lives, player_money):
         super().__init__(player_group, all_sprites)
 
-        self.count_lives = 3
+        self.count_lives = player_lives
+        self.money = player_money
 
         self.cane_attack = False
         self.move_right_left = False
@@ -391,7 +392,7 @@ class GorillaEnemy(pygame.sprite.Sprite):
             self.rect = self.rect.move(0, 10)
         self.count_falling += 1
         if self.rect.y > 1000:
-            self.falling = False
+            self.rect = self.rect.move(self.position_x, self.position_y)
 
     def update(self, move_event=None):
         if self.move:
@@ -462,7 +463,6 @@ class Tile(pygame.sprite.Sprite):
         elif tile_type == "H":
             self.image = pygame.transform.scale(self.image, (1 * TILE_SIZE, 2 * TILE_SIZE))
             pos_y -= 1
-            # self.add(stump_group)
         else:
             self.image = pygame.transform.scale(self.image, (TILE_SIZE, TILE_SIZE))
         self.rect = self.image.get_rect().move(TILE_SIZE * pos_x, TILE_SIZE * pos_y)
@@ -517,9 +517,9 @@ def level_generation():
     for y in range(len(level_map)):
         for x in range(len(level_map[y])):
             if level_map[y][x] == "P":
-                player = ScroogeMcDuck(x, y + 2)
+                player = ScroogeMcDuck(x, y + 2, count_lives, money)
                 player_group.add(player)
-                if current_level == 3:
+                if current_level == 2:
                     Tile(level_map[y][x + 1], x, y + 2)
             elif level_map[y][x] == "M":
                 grass = Tile(level_map[y][x], x, y + 2)
@@ -561,6 +561,84 @@ def start_screen():
         clock.tick(FPS)
 
 
+def levels():
+    global count_lives, money
+    count_lives = 3
+    money = 2000
+    for i in range(3):
+        global current_level
+        current_level = i + 1
+        sky_colour = LEVELS_INFO[current_level]["colour"]
+        screen.fill(sky_colour)
+
+        camera = Camera()
+
+        player = level_generation()
+
+        clock = pygame.time.Clock()
+        running = True
+
+        move_left = False
+        move_right = False
+        while running:
+            jump = False
+            cane_attack = False
+            if player.cursor_collision():
+                running = False
+                count_lives = player.count_lives
+                money = player.money
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                    terminate()
+
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_LEFT:
+                        move_left = True
+                    if event.key == pygame.K_RIGHT:
+                        move_right = True
+
+                if event.type == pygame.KEYUP:
+                    if event.key == pygame.K_LEFT:
+                        move_left = False
+                    if event.key == pygame.K_RIGHT:
+                        move_right = False
+
+                keys = pygame.key.get_pressed()
+                if keys[pygame.K_z]:
+                    jump = True
+                if keys[pygame.K_x]:
+                    cane_attack = True
+
+            if move_right:
+                player_group.update("right")
+            if move_left:
+                player_group.update("left")
+            if jump:
+                player_group.update("jump")
+            if cane_attack:
+                player_group.update("cane_attack")
+
+            camera.update(player)
+            for sprite in all_sprites:
+                camera.apply(sprite)
+
+            screen.fill(sky_colour)
+            lives_and_score()
+
+            player_group.update()
+            enemy_group.update()
+
+            all_sprites.draw(screen)
+            player_group.draw(screen)
+            enemy_group.draw(screen)
+            pygame.display.flip()
+            clock.tick(FPS)
+
+        for elem in all_sprites:
+            elem.kill()
+
+
 def lives_and_score():
     black_part = pygame.Surface([WIDTH, 2 * TILE_SIZE])
     black_part.fill(pygame.Color("black"))
@@ -591,7 +669,7 @@ def lives_and_score():
         screen.blit(image, (lives_x, lives_y))
         lives_x += TILE_SIZE // 2 + 4
 
-    string_rendered = font.render(f"MONEY: {'40000'}", True, pygame.Color("white"))
+    string_rendered = font.render(f"MONEY: {player.money}", True, pygame.Color("white"))
     string_rect = string_rendered.get_rect()
     string_rect.top = 35
     string_rect.x = WIDTH // 2 + WIDTH // 10
@@ -609,80 +687,16 @@ if __name__ == '__main__':
     size = width, height = WIDTH, HEIGHT
     screen = pygame.display.set_mode(size)
 
-    start_screen()
-
-    current_level = 1
-
-    sky_colour = LEVELS_INFO[current_level]["colour"]
-    screen.fill(sky_colour)
-
-    camera = Camera()
-
     all_sprites = pygame.sprite.Group()
     tiles_group = pygame.sprite.Group()
     player_group = pygame.sprite.Group()
     enemy_group = pygame.sprite.Group()
-    # gorilla group creation???
     stump_group = pygame.sprite.Group()
     grass_group = pygame.sprite.Group()
     rock_group = pygame.sprite.Group()
     cursor_group = pygame.sprite.Group()
 
-    player = level_generation()
+    start_screen()
+    levels()
 
-    clock = pygame.time.Clock()
-    running = True
-
-    move_left = False
-    move_right = False
-
-    while running:
-        jump = False
-        cane_attack = False
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
-                    move_left = True
-                if event.key == pygame.K_RIGHT:
-                    move_right = True
-
-            if event.type == pygame.KEYUP:
-                if event.key == pygame.K_LEFT:
-                    move_left = False
-                if event.key == pygame.K_RIGHT:
-                    move_right = False
-
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_z]:
-                jump = True
-            if keys[pygame.K_x]:
-                cane_attack = True
-
-        if move_right:
-            player_group.update("right")
-        if move_left:
-            player_group.update("left")
-        if jump:
-            player_group.update("jump")
-        if cane_attack:
-            player_group.update("cane_attack")
-
-        camera.update(player)
-        for sprite in all_sprites:
-            camera.apply(sprite)
-
-        screen.fill(sky_colour)
-        lives_and_score()
-
-        player_group.update()
-        enemy_group.update()
-
-        all_sprites.draw(screen)
-        player_group.draw(screen)
-        enemy_group.draw(screen)
-        pygame.display.flip()
-        clock.tick(FPS)
     pygame.quit()

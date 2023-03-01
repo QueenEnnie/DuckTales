@@ -124,8 +124,8 @@ def lives():
 
 def get_levels_information():
     return {1: {"colour": get_sky_colour(), "map": "first_level_map.txt"},
-            2: {"colour": "black", "map": "second_level_map.txt"},
-            3: {"colour": "black", "map": "third_level_map.txt"}}
+            3: {"colour": "black", "map": "third_level_map.txt"},
+            2: {"colour": "black", "map": "second_level_map.txt"}}
 
 
 get_amazon_landscapes_images()
