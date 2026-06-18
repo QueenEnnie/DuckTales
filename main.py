@@ -39,6 +39,7 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
         self.return_from_stump_on_the_ground = False
         self.current_injury = False
         self.falling = False
+        self.start_collision = False
         self.direction = "left"
 
         self.delta_walk = 0
@@ -94,7 +95,6 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
                     self.delta_walk = collision.rect.x + collision.rect.w - self.rect.x
                 if collision.rect.x > self.rect.x and self.direction == "right":
                     self.delta_walk = collision.rect.x - (self.rect.x + self.rect.w)
-                self.rect = self.rect.move(self.delta_walk, 0)
 
     def stump_collision_jump(self):
         if self.move_on_the_stump:
@@ -173,10 +173,7 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
             current_image = self.count_iteration_left_right % len(self.walking_image[self.direction])
             self.change_image(self.walking_image[self.direction][current_image])
             self.count_iteration_left_right += 1
-        if self.count_iteration_left_right == 2:
-            self.rect = self.rect.move(self.delta_walk, 0)
-            self.move_right_left = False
-            self.count_iteration_left_right = 0
+        self.rect = self.rect.move(self.delta_walk, 0)
         self.count_loop += 1
 
     def cursor_collision(self):
@@ -219,21 +216,18 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
             collision.kill()
 
     def cane_attacking(self):
-        if self.jump:
-            image_name = self.images_with_cane[self.direction]
-            self.change_image(image_name)
-        else:
-            self.jump = False
+        image_name = self.images_with_cane[self.direction]
+        self.change_image(image_name)
 
     def injury(self):
         if not self.current_injury:
-            if self.count_lives > 0:
-                self.count_lives -= 1
-            else:
+            self.count_lives = max(0, self.count_lives - 1)
+            self.change_image(self.dead_images[self.direction])
+            if self.count_lives == 0:
                 self.falling = True
                 self.current_injury = False
+                return
             self.current_injury = True
-            self.change_image(self.dead_images[self.direction])
         if self.count_pain < 10 and not self.reach_higher_point_in_pain:
             self.rect = self.rect.move(0, -5)
             self.count_pain += 1
@@ -253,7 +247,7 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
     def death(self):
         self.rect = self.rect.move(0, 10)
 
-    def update(self, move_event=None):
+    def update(self, move_event=None, jump_pressed=False, cane_attack_pressed=False):
         if self.cursor_collision():
             return
 
@@ -269,26 +263,27 @@ class ScroogeMcDuck(pygame.sprite.Sprite):
             self.direction = move_event
             if self.jump:
                 if move_event == "right":
-                    self.delta_jump_x = 10
+                    self.delta_jump_x = 5
                 elif move_event == "left":
-                    self.delta_jump_x = -10
+                    self.delta_jump_x = -5
                 self.delta_jump_y = 20
                 self.reach_higher_point = False
             else:
                 self.move_right_left = True
                 if move_event == "right":
-                    self.delta_walk = 20
+                    self.delta_walk = 5
                 elif move_event == "left":
-                    self.delta_walk = -20
+                    self.delta_walk = -5
+        elif not self.jump:
+            self.move_right_left = False
 
-        if move_event == "jump":
+        if jump_pressed:
             self.jump = True
 
-        if move_event == "cane_attack":
-            if self.jump:
-                self.cane_attack = True
-            else:
-                self.cane_attack = False
+        was_cane_attacking = self.cane_attack
+        self.cane_attack = cane_attack_pressed
+        if was_cane_attacking and not self.cane_attack and not self.jump and not self.move_right_left:
+            self.change_image(self.standing_image[self.direction])
         self.take_diamonds()
         self.stump_collision_walk()
         self.rock_collision()
@@ -446,8 +441,7 @@ class FlowerEnemy(pygame.sprite.Sprite):
         if pygame.sprite.collide_mask(self, player):
             if not player.start_collision:
                 player.injury()
-                self.move = False
-                self.change_image(self.all_images[0])
+                player.start_collision = True
         else:
             player.start_collision = False
 
@@ -593,11 +587,69 @@ def start_screen():
         clock.tick(FPS)
 
 
-def levels():
+def level_selection_screen():
+    title_font = pygame.font.Font(None, 72)
+    option_font = pygame.font.Font(None, 48)
+    level_rects = []
+    for index in range(3):
+        level_rects.append(pygame.Rect(WIDTH // 2 - 180, 250 + index * 90, 360, 65))
+
+    clock = pygame.time.Clock()
+    while True:
+        screen.fill(pygame.Color("#10263d"))
+        title = title_font.render("SELECT LEVEL", True, pygame.Color("white"))
+        screen.blit(title, title.get_rect(center=(WIDTH // 2, 140)))
+
+        mouse_position = pygame.mouse.get_pos()
+        for index, level_rect in enumerate(level_rects, start=1):
+            colour = pygame.Color("#214f78") if level_rect.collidepoint(mouse_position) else pygame.Color("#183b5b")
+            pygame.draw.rect(screen, colour, level_rect, border_radius=12)
+            label = option_font.render(f"LEVEL {index}", True, pygame.Color("white"))
+            screen.blit(label, label.get_rect(center=level_rect.center))
+
+        hint = pygame.font.Font(None, 30).render("Press 1, 2, 3 or click a level", True, pygame.Color("#b9cee2"))
+        screen.blit(hint, hint.get_rect(center=(WIDTH // 2, 590)))
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
+            if event.type == pygame.KEYDOWN and pygame.K_1 <= event.key <= pygame.K_3:
+                return event.key - pygame.K_0
+            if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                for index, level_rect in enumerate(level_rects, start=1):
+                    if level_rect.collidepoint(event.pos):
+                        return index
+        clock.tick(FPS)
+
+
+def game_over_screen(score):
+    screen.fill(pygame.Color("#10263d"))
+    title_font = pygame.font.Font(None, 120)
+    text_font = pygame.font.Font(None, 42)
+    title = title_font.render("GAME OVER", True, pygame.Color("#b9cee2"))
+    score_text = text_font.render(f"MONEY: {score}", True, pygame.Color("white"))
+    hint = text_font.render("Press any key to close", True, pygame.Color("#c9c9c9"))
+    screen.blit(title, title.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 90)))
+    screen.blit(score_text, score_text.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 20)))
+    screen.blit(hint, hint.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 100)))
+    pygame.display.flip()
+
+    clock = pygame.time.Clock()
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                return
+            if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                return
+        clock.tick(FPS)
+
+
+def levels(start_level=1):
     global count_lives, money
     count_lives = 3
     money = 0
-    for i in range(3):
+    for i in range(start_level - 1, 3):
         global current_level
         current_level = i + 1
         sky_colour = LEVELS_INFO[current_level]["colour"]
@@ -613,8 +665,6 @@ def levels():
         move_left = False
         move_right = False
         while running:
-            jump = False
-            cane_attack = False
             if player.cursor_collision():
                 running = False
                 count_lives = player.count_lives
@@ -636,20 +686,17 @@ def levels():
                     if event.key == pygame.K_RIGHT:
                         move_right = False
 
-                keys = pygame.key.get_pressed()
-                if keys[pygame.K_z]:
-                    jump = True
-                if keys[pygame.K_x]:
-                    cane_attack = True
+            keys = pygame.key.get_pressed()
+            jump = keys[pygame.K_z]
+            control_pressed = keys[pygame.K_LCTRL] or keys[pygame.K_RCTRL]
+            cane_attack = keys[pygame.K_x] and control_pressed
 
-            if move_right:
-                player_group.update("right")
-            if move_left:
-                player_group.update("left")
-            if jump:
-                player_group.update("jump")
-            if cane_attack:
-                player_group.update("cane_attack")
+            move_event = None
+            if move_right and not move_left:
+                move_event = "right"
+            elif move_left and not move_right:
+                move_event = "left"
+            player_group.update(move_event, jump, cane_attack)
 
             camera.update(player)
             for sprite in all_sprites:
@@ -658,8 +705,11 @@ def levels():
             screen.fill(sky_colour)
             lives_and_score()
 
-            player_group.update()
             enemy_group.update()
+
+            if player.falling and player.rect.top > HEIGHT:
+                game_over_screen(player.money)
+                return
 
             all_sprites.draw(screen)
             player_group.draw(screen)
@@ -730,6 +780,7 @@ if __name__ == '__main__':
     diamond_group = pygame.sprite.Group()
 
     start_screen()
-    levels()
+    selected_level = level_selection_screen()
+    levels(selected_level)
 
     pygame.quit()
